@@ -12,6 +12,7 @@ import { OrmContext } from './types/types'
 import MongoDBStore from 'connect-mongodb-session'
 import { CollectionResolver } from './resolvers/collection'
 import { NotesListResolver } from './resolvers/notesList'
+import cors from 'cors'
 const MongoStore = MongoDBStore(session)
 
 const main = async () => {
@@ -20,9 +21,12 @@ const main = async () => {
 
    const app = express()
 
-   // app.use(
-   //    cors()
-   // )
+   app.use(
+      cors({
+         origin: process.env.CORS_ORIGIN,
+         credentials: true,
+      })
+   )
 
    app.use(
       session({
@@ -37,7 +41,6 @@ const main = async () => {
             httpOnly: true,
             sameSite: "lax", // csrf
             secure: __prod__, // cookie only works in https
-            domain: __prod__ ? ".herokuapp.com" : undefined
          },
          saveUninitialized: false,
          secret: process.env.SESSION_SECRET,
@@ -59,10 +62,7 @@ const main = async () => {
 
    apolloServer.applyMiddleware({
       app,
-      cors: {
-         origin: process.env.CORS_ORIGIN,
-         credentials: true,
-      }
+      cors: false
    })
 
    const port = process.env.PORT || 3000
