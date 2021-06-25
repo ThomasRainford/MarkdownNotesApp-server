@@ -21,12 +21,9 @@ const main = async () => {
 
    const app = express()
 
-   app.use(
-      cors({
-         origin: process.env.CORS_ORIGIN,
-         credentials: true,
-      })
-   )
+   // app.use(
+   //    cors()
+   // )
 
    app.use(
       session({
@@ -57,12 +54,15 @@ const main = async () => {
          em: orm.em,
          req,
          res,
-      })
+      }),
    })
 
    apolloServer.applyMiddleware({
       app,
-      cors: false
+      cors: {
+         origin: process.env.CORS_ORIGIN,
+         credentials: true,
+      }
    })
 
    const port = process.env.PORT || 3000
