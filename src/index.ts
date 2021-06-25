@@ -1,6 +1,5 @@
 import { MikroORM } from '@mikro-orm/core'
 import { ApolloServer } from "apollo-server-express"
-import cors from 'cors'
 import 'dotenv-safe/config'
 import express from "express"
 import session from 'express-session'
