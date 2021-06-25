@@ -20,7 +20,7 @@ const main = async () => {
    const orm = await MikroORM.init(ormConfig)
 
    const app = express()
-
+   app.set('trust proxy', 1)
    app.use(
       cors({
          origin: process.env.CORS_ORIGIN,
@@ -38,7 +38,7 @@ const main = async () => {
          }),
          cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
-            //httpOnly: true,
+            httpOnly: true,
             sameSite: "lax", // csrf
             secure: __prod__, // cookie only works in https
             domain: __prod__ ? ".herokuapp.com" : undefined
