@@ -29,7 +29,6 @@ export class UserResolver {
       return user
    }
 
-<<<<<<< HEAD
    @Query(() => User, { nullable: true })
    @UseMiddleware(isAuth)
    async user(
@@ -43,8 +42,6 @@ export class UserResolver {
       return user
    }
 
-=======
->>>>>>> 0e4e2034c8babf618cb1bb112e6937f2dfac94d1
    @Mutation(() => UserResponse)
    async register(
       @Arg('registerInput') registerInput: UserRegisterInput,
