@@ -246,11 +246,18 @@ export class UserResolver {
       }
 
       if (me.following.includes(targetUserId)) {
+         me.following = me.following.filter((value: string) => {
+            return value !== targetUserId
+         })
+         targetUser.followers = targetUser.followers.filter((value: string) => {
+            return value !== meId
+         })
+         console.log(me.following)
          return false
+      } else {
+         me.following.push(targetUserId)
+         targetUser.followers.push(meId)
       }
-
-      me.following.push(targetUserId)
-      targetUser.followers.push(meId)
 
       await em.persistAndFlush(me)
 
