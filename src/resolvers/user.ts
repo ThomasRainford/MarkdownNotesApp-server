@@ -317,7 +317,7 @@ export class UserResolver {
    @UseMiddleware(isAuth)
    async publicNotes(
       @Arg('username') username: string,
-      @Ctx() { em }: OrmContext
+      @Ctx() { em, req }: OrmContext
    ): Promise<Collection[] | null> {
 
       const collectionsRepo = em.getRepository(Collection)
@@ -325,13 +325,19 @@ export class UserResolver {
 
       const user = await repo.findOne({ username }, ['collections'])
 
-      const publicCollections = await collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
+      let collections;
+      if (req.session.userId === user?._id) {
+         collections = await collectionsRepo.find({ owner: user?.id })
+      } else {
+         collections = await collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
 
-      if (!publicCollections) {
+      }
+
+      if (!collections) {
          return null
       }
 
-      return publicCollections
+      return collections
    }
 
    @Mutation(() => CollectionResponse)
