@@ -316,13 +316,16 @@ export class UserResolver {
    @Query(() => [Collection], { nullable: true })
    @UseMiddleware(isAuth)
    async publicNotes(
-      @Arg('targetUserId') targetUserId: string,
+      @Arg('username') username: string,
       @Ctx() { em }: OrmContext
    ): Promise<Collection[] | null> {
 
       const collectionsRepo = em.getRepository(Collection)
+      const repo = em.getRepository(User)
 
-      const publicCollections = await collectionsRepo.find({ owner: targetUserId }, { filters: ['visibility'] })
+      const user = await repo.findOne({ username }, ['collections'])
+
+      const publicCollections = await collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
 
       if (!publicCollections) {
          return null
