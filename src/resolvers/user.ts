@@ -328,9 +328,9 @@ export class UserResolver {
       let collections;
       if (user) {
          if (req.session.userId?.equals(user._id)) {
-            collections = await collectionsRepo.find({ owner: user?.id })
+            collections = collectionsRepo.find({ owner: user?.id })
          } else {
-            collections = await collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
+            collections = collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
 
          }
       }
