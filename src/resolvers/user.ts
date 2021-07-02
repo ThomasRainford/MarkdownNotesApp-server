@@ -326,11 +326,13 @@ export class UserResolver {
       const user = await repo.findOne({ username }, ['collections'])
 
       let collections;
-      if (req.session.userId === user?._id) {
-         collections = await collectionsRepo.find({ owner: user?.id })
-      } else {
-         collections = await collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
+      if (user) {
+         if (req.session.userId?.equals(user._id)) {
+            collections = await collectionsRepo.find({ owner: user?.id })
+         } else {
+            collections = await collectionsRepo.find({ owner: user?.id }, { filters: ['visibility'] })
 
+         }
       }
 
       if (!collections) {
