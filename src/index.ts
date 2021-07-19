@@ -31,7 +31,7 @@ const main = async () => {
          credentials: true,
       })
    )
-   console.log(__prod__ ? process.env.CORS_ORIGIN : process.env.CORS_ORIGIN_DEV)
+   console.log(process.env.CORS_ORIGIN_DEV)
 
    app.use(
       session({
