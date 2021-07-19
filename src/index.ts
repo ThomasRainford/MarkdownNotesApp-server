@@ -14,6 +14,10 @@ import { CollectionResolver } from './resolvers/collection'
 import { NotesListResolver } from './resolvers/notesList'
 import cors from 'cors'
 const MongoStore = MongoDBStore(session)
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require('dotenv-safe').config({
+   allowEmptyValues: true
+});
 
 const main = async () => {
 
@@ -23,7 +27,7 @@ const main = async () => {
    app.set('trust proxy', 1)
    app.use(
       cors({
-         origin: process.env.CORS_ORIGIN,
+         origin: __prod__ ? process.env.CORS_ORIGIN : process.env.CORS_ORIGIN_DEV,
          credentials: true,
       })
    )
