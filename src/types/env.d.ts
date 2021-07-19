@@ -8,6 +8,5 @@ declare namespace NodeJS {
     SESSION_SECRET: string;
     JWT_SECRET: string;
     CLIENT_DOMAIN: string;
-    CLIENT_DOMAIN_DEV: string;
   }
 }
