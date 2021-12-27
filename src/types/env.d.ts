@@ -3,6 +3,7 @@ declare namespace NodeJS {
     MONGO_USERNAME: string;
     MONGO_PASSWORD: string;
     MONGO_HOST: string;
+    MONGO_HOST_TEST: string;
     CORS_ORIGIN: string;
     CORS_ORIGIN_DEV: string;
     SESSION_SECRET: string;
