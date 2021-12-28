@@ -1,44 +1,29 @@
-import { MikroORM } from "@mikro-orm/core";
-import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
 import { MongoClient } from "mongodb";
-import mikroOrmConfig from "./mikro-orm.config";
-import { CollectionResolver } from "../../resolvers/collection";
-import { NotesListResolver } from "../../resolvers/notesList";
-import { UserResolver } from "../../resolvers/user";
-import { OrmContext } from "../../types/types";
 
-const dropDb = async () => {
-  const client = await MongoClient.connect(
-    `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`
+export const dropDb = async () => {
+  MongoClient.connect(
+    `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`,
+    (error, db) => {
+      if (error) throw error;
+      const _db = db.db("testing-db");
+      //console.log("Connected to " + _db);
+      _db.dropDatabase((error, _) => {
+        if (error) throw error;
+        //console.log("Drop successful!");
+        db.close();
+      });
+    }
   );
 
-  try {
-    const connect = client.db("testing-db");
-    connect.dropDatabase();
+  // try {
+  //   const client = await MongoClient.connect(
+  //     `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`
+  //   );
+  //   const connect = client.db("testing-db");
+  //   connect.dropDatabase();
 
-    console.log("Drop Successful!");
-  } catch (error: any) {
-    console.log("Error! ", error);
-  }
-};
-
-export const testConnection = async () => {
-  dropDb();
-
-  const orm = await MikroORM.init(mikroOrmConfig);
-
-  const apolloServer = new ApolloServer({
-    schema: await buildSchema({
-      resolvers: [UserResolver, CollectionResolver, NotesListResolver],
-      validate: false,
-    }),
-    context: ({ req, res }: never): OrmContext => ({
-      em: orm.em,
-      req,
-      res,
-    }),
-  });
-
-  return apolloServer;
+  //   console.log("Drop Successful!");
+  // } catch (error: any) {
+  //   console.log("Error! ", error);
+  // }
 };
