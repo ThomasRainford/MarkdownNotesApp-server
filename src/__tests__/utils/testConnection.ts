@@ -8,7 +8,24 @@ import { NotesListResolver } from "../../resolvers/notesList";
 import { UserResolver } from "../../resolvers/user";
 import { OrmContext } from "../../types/types";
 
+const dropDb = async () => {
+  const client = await MongoClient.connect(
+    `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`
+  );
+
+  try {
+    const connect = client.db("testing-db");
+    connect.dropDatabase();
+
+    console.log("Drop Successful!");
+  } catch (error: any) {
+    console.log("Error! ", error);
+  }
+};
+
 export const testConnection = async () => {
+  dropDb();
+
   const orm = await MikroORM.init(mikroOrmConfig);
 
   const apolloServer = new ApolloServer({
@@ -22,19 +39,6 @@ export const testConnection = async () => {
       res,
     }),
   });
-
-  const client = await MongoClient.connect(
-    `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`
-  );
-
-  try {
-    const connect = client.db("testing-db");
-    connect.dropDatabase();
-
-    console.log("Drop Successful!");
-  } catch (error: any) {
-    console.log("Error! ", error);
-  }
 
   return apolloServer;
 };

@@ -10,7 +10,8 @@
     "start": "node dist/index.js",
     "lint": "eslint src --quiet --fix",
     "gen-env-types": "npx gen-env-types .env -o src/types/env.d.ts -e .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "setup:db": "ts-node ./src/__tests__/utils/setup.ts",
+    "test": "npm run setup:db && jest"
   },
   "keywords": [],
   "author": "",
