@@ -28,7 +28,7 @@ describe("Register", () => {
     }
   });
 
-  it("should register a user", async () => {
+  it("should register a user successfully", async () => {
     const source = `
       mutation Register($registerInput: UserRegisterInput!) {
         register(registerInput: $registerInput) {
@@ -48,7 +48,7 @@ describe("Register", () => {
     const variableValues = {
       registerInput: {
         email: "thomas@rainfords.net",
-        username: "Nameee",
+        username: "thomas",
         password: "password",
       },
     };
@@ -61,6 +61,10 @@ describe("Register", () => {
 
     console.log(JSON.stringify(result));
 
-    expect(result?.data?.register.user).not.toBeNull();
+    const register = result?.data?.register;
+
+    expect(register.user).not.toBeNull();
+    expect(register.user.username).toEqual("thomas");
+    expect(register.errors).toBeNull();
   });
 });

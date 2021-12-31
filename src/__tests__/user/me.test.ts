@@ -32,7 +32,7 @@ describe("Me", () => {
   it("should get a user", async () => {
     const user = new User({
       email: "thomas@rainfords.net",
-      username: "Nameee",
+      username: "thomas",
       password: "password",
     });
     await em.populate(user, ["collections"]);
@@ -56,6 +56,9 @@ describe("Me", () => {
 
     console.log(JSON.stringify(result));
 
-    expect(result?.data?.me.user).not.toBeNull();
+    const me = result?.data?.me;
+
+    expect(me.user).not.toBeNull();
+    expect(me.username).toEqual("thomas");
   });
 });
