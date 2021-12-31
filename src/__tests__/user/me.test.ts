@@ -2,11 +2,12 @@ import Application from "../../application";
 import { dropDb, gqlReq } from "../utils/utils";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
+import { User } from "../../entities/User";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
 
-describe("Register", () => {
+describe("Me", () => {
   beforeAll(async () => {
     application = new Application();
 
@@ -28,39 +29,33 @@ describe("Register", () => {
     }
   });
 
-  it("should register a user", async () => {
+  it("should get a user", async () => {
+    const user = new User({
+      email: "thomas@rainfords.net",
+      username: "Nameee",
+      password: "password",
+    });
+    await em.populate(user, ["collections"]);
+    await em.persistAndFlush(user);
+
     const source = `
-      mutation Register($registerInput: UserRegisterInput!) {
-        register(registerInput: $registerInput) {
-          user {
-            _id
-            email
-            username
-          }
-          errors {
-            field
-            message
-          }
+      query {
+        me {
+          id
+          username
+          email
         }
       }
     `;
 
-    const variableValues = {
-      registerInput: {
-        email: "thomas@rainfords.net",
-        username: "Nameee",
-        password: "password",
-      },
-    };
-
     const result = await gqlReq({
       source,
-      variableValues,
+      userId: user._id,
       em,
     });
 
     console.log(JSON.stringify(result));
 
-    expect(result?.data?.register.user).not.toBeNull();
+    expect(result?.data?.me.user).not.toBeNull();
   });
 });

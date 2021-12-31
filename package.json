@@ -11,7 +11,7 @@
     "lint": "eslint src --quiet --fix",
     "gen-env-types": "npx gen-env-types .env -o src/types/env.d.ts -e .",
     "setup:db": "ts-node ./src/__tests__/utils/setup.ts",
-    "test": "jest --forceExit"
+    "test": "jest --detectOpenHandles --forceExit"
   },
   "keywords": [],
   "author": "",
