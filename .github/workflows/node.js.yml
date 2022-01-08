@@ -30,6 +30,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Test secrets
+        run: echo "Mongo username is:${{secrets.MONGO_USERNAME}}"
       - name: create env file
         run: |
           touch .env
