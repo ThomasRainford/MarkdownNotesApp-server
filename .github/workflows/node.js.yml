@@ -12,18 +12,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      MONGO_USERNAME: ${{secrets.MONGO_USERNAME}}
+      MONGO_PASSWORD: ${{secrets.MONGO_PASSWORD}}
+      MONGO_HOST: ${{secrets.MONGO_HOST}}
+      MONGO_HOST_TEST: ${{secrets.MONGO_HOST_TEST}}
+      CORS_ORIGIN: ${{secrets.CORS_ORIGIN}}
+      CORS_ORIGIN_DEV: ${{secrets.CORS_ORIGIN_DEV}}
+      SESSION_SECRET: ${{secrets.SESSION_SECRET}}
+      JWT_SECRET: ${{secrets.JWT_SECRET}}
+      CLIENT_DOMAIN: ${{secrets.CLIENT_DOMAIN}}
 
-    strategy:
-      matrix:
-        node-version: [12.x, 14.x, 16.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+  strategy:
+    matrix:
+      node-version: [12.x, 14.x, 16.x]
+      # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - run: yarn
-      - run: yarn test
+  steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: "npm"
+    - run: yarn
+    - run: yarn test
