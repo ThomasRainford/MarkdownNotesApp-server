@@ -155,6 +155,6 @@ export default class Application {
     });
 
     const port = process.env.PORT || 3001;
-    this.expressServer = this.host.listen(port, () => {});
+    this.expressServer = this.host.listen(port);
   };
 }
