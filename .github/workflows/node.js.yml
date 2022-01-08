@@ -30,6 +30,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: create env file
+        run: |
+          touch .env
+          echo MONGO_USERNAME=${{secrets.MONGO_USERNAME}} >> .env
+          echo MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} >> .env
+          echo MONGO_HOST=${{secrets.MONGO_HOST}} >> .env
+          echo MONGO_HOST_TEST=${{secrets.MONGO_HOST_TEST}} >> .env
+          echo CORS_ORIGIN=${{secrets.CORS_ORIGIN}} >> .env
+          echo CORS_ORIGIN_DEV=${{secrets.CORS_ORIGIN_DEV}} >> .env
+          echo SESSION_SECRET=${{secrets.SESSION_SECRET}} >> .env
+          echo JWT_SECRET=${{secrets.JWT_SECRET}} >> .env
+          echo CLIENT_DOMAIN=${{secrets.CLIENT_DOMAIN}} >> .env
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
