@@ -59,8 +59,8 @@ describe("User query", () => {
     const user = userResult?.data?.user;
 
     expect(user).not.toBeNull();
-    expect(user.username).toEqual("thomas");
-    expect(user.email).toEqual("thomas@mail.net");
+    expect(user.username).toEqual(newUser.username);
+    expect(user.email).toEqual(newUser.email);
   });
 
   it("should fail to get a user.", async () => {

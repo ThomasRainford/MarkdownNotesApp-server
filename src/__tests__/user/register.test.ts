@@ -55,8 +55,10 @@ describe("Register Mutation", () => {
     const register = result?.data?.register;
 
     expect(register.user).not.toBeNull();
-    expect(register.user.email).toEqual("thomas@mail.net");
-    expect(register.user.username).toEqual("thomas");
+    expect(register.user.email).toEqual(variableValues.registerInput.email);
+    expect(register.user.username).toEqual(
+      variableValues.registerInput.username
+    );
     expect(register.errors).toBeNull();
   });
 

@@ -33,3 +33,19 @@ query User($username: String!){
   }
 }
 `;
+
+export const loginMutation = `
+  mutation Login($usernameOrEmail: String!, $password: String!){
+    login(usernameOrEmail: $usernameOrEmail, password: $password) {
+      user {
+        id
+        email
+        username
+      }
+      errors {
+        field
+        message
+      }
+    }
+  }
+`;

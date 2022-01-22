@@ -56,8 +56,8 @@ describe("Me Query", () => {
     const me = result?.data?.me;
 
     expect(me.user).not.toBeNull();
-    expect(me.email).toEqual("thomas@mail.net");
-    expect(me.username).toEqual("thomas");
+    expect(me.email).toEqual(user.email);
+    expect(me.username).toEqual(user.username);
   });
 
   it("should fail to get a user that is not authenticated", async () => {
