@@ -3,6 +3,7 @@ import { dropDb, gqlReq } from "../utils/utils";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import { registerMutation } from "./utils";
+import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
@@ -15,6 +16,8 @@ describe("Register Mutation", () => {
     await application.initTest();
 
     em = application.orm.em.fork();
+
+    await seed(em);
   });
 
   afterAll(async () => {
@@ -90,5 +93,10 @@ describe("Register Mutation", () => {
 
     expect(firstRegister.user).not.toBeNull();
     expect(secondRegister.user).toBeNull();
+    expect(secondRegister.errors).toHaveLength(1);
+    expect(secondRegister.errors[0]).toEqual({
+      field: "registerInput",
+      message: "Already registered",
+    });
   });
 });
