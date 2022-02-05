@@ -4,7 +4,7 @@ import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import { User } from "../../entities/User";
 import { loginMutation } from "./utils";
-import argon2 from "argon2";
+import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
@@ -17,6 +17,8 @@ describe("Login mutation", () => {
     await application.initTest();
 
     em = application.orm.em.fork();
+
+    await seed(em);
   });
 
   afterAll(async () => {
@@ -31,136 +33,108 @@ describe("Login mutation", () => {
     }
   });
 
-  afterEach(async () => {
-    await dropDb();
-  });
-
   it("should get a user", async () => {
-    const password = "password";
-    const newUser = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: await argon2.hash(password),
-    });
-    await em.populate(newUser, ["collections"]);
-    await em.persistAndFlush(newUser);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const loginValues = {
-      usernameOrEmail: newUser.email,
-      password: password,
+      usernameOrEmail: user?.email,
+      password: "password1",
     };
 
     const loginResult = await gqlReq({
       source: loginMutation,
       variableValues: loginValues,
       em,
-      userId: newUser._id,
+      userId: user?._id,
     });
 
     console.log(JSON.stringify(loginResult));
 
-    const user = loginResult.data?.login?.user;
+    const userResult = loginResult.data?.login?.user;
 
-    expect(user).not.toBeNull();
-    expect(user.id).toEqual(newUser.id);
-    expect(user.username).toEqual(newUser.username);
-    expect(user.email).toEqual(newUser.email);
+    expect(userResult).not.toBeNull();
+    expect(userResult.id).toEqual(user?.id);
+    expect(userResult.username).toEqual(user?.username);
+    expect(userResult.email).toEqual(user?.email);
   });
 
   it("should fail to get a user from incorrect email.", async () => {
-    const password = "password";
-    const newUser = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: await argon2.hash(password),
-    });
-    await em.populate(newUser, ["collections"]);
-    await em.persistAndFlush(newUser);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const loginValues = {
       usernameOrEmail: "incorrect@email.com",
-      password: password,
+      password: "password1",
     };
 
     const loginResult = await gqlReq({
       source: loginMutation,
       variableValues: loginValues,
       em,
-      userId: newUser._id,
+      userId: user?._id,
     });
 
     console.log(JSON.stringify(loginResult));
 
-    const user = loginResult.data?.login?.user;
+    const userResult = loginResult.data?.login?.user;
     const errors = loginResult.data?.login?.errors;
 
-    expect(user).toBeNull();
+    expect(userResult).toBeNull();
     expect(errors).toHaveLength(1);
     expect(errors[0].field).toEqual("usernameOrEmail");
     expect(errors[0].message).toEqual("Email does not exist.");
   });
 
   it("should fail to get a user from incorrect username.", async () => {
-    const password = "password";
-    const newUser = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: await argon2.hash(password),
-    });
-    await em.populate(newUser, ["collections"]);
-    await em.persistAndFlush(newUser);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const loginValues = {
       usernameOrEmail: "incorrect-username",
-      password: password,
+      password: "password1",
     };
 
     const loginResult = await gqlReq({
       source: loginMutation,
       variableValues: loginValues,
       em,
-      userId: newUser._id,
+      userId: user?._id,
     });
 
     console.log(JSON.stringify(loginResult));
 
-    const user = loginResult.data?.login?.user;
+    const userResult = loginResult.data?.login?.user;
     const errors = loginResult.data?.login?.errors;
 
-    expect(user).toBeNull();
+    expect(userResult).toBeNull();
     expect(errors).toHaveLength(1);
     expect(errors[0].field).toEqual("usernameOrEmail");
     expect(errors[0].message).toEqual("Username does not exist.");
   });
 
   it("should fail to get a user from incorrect password.", async () => {
-    const password = "password";
-    const newUser = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: await argon2.hash(password),
-    });
-    await em.populate(newUser, ["collections"]);
-    await em.persistAndFlush(newUser);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const loginValues = {
-      usernameOrEmail: newUser.email,
-      password: password + "-incorrect",
+      usernameOrEmail: user?.email,
+      password: "password1" + "-incorrect",
     };
 
     const loginResult = await gqlReq({
       source: loginMutation,
       variableValues: loginValues,
       em,
-      userId: newUser._id,
+      userId: user?._id,
     });
 
     console.log(JSON.stringify(loginResult));
 
-    const user = loginResult.data?.login?.user;
+    const userResult = loginResult.data?.login?.user;
     const errors = loginResult.data?.login?.errors;
 
-    expect(user).toBeNull();
+    expect(userResult).toBeNull();
     expect(errors).toHaveLength(1);
     expect(errors[0].field).toEqual("password");
     expect(errors[0].message).toEqual("Incorrect Password.");
