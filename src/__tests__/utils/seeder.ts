@@ -37,9 +37,10 @@ const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
   });
   await em.populate(user1, ["collections"]);
   await em.populate(user2, ["collections"]);
-  await em.populate(user1, ["collections"]);
+  await em.populate(user3, ["collections"]);
+  await em.populate(user4, ["collections"]);
 
-  await em.persistAndFlush([user1, user2, user3]);
+  await em.persistAndFlush([user1, user2, user3, user4]);
   users.push(user1, user2, user3, user4);
   return users;
 };

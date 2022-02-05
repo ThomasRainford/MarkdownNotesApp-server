@@ -4,6 +4,7 @@ import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import { User } from "../../entities/User";
 import { meQuery } from "./utils";
+import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
@@ -16,6 +17,8 @@ describe("Me Query", () => {
     await application.initTest();
 
     em = application.orm.em.fork();
+
+    await seed(em);
   });
 
   afterAll(async () => {
@@ -30,24 +33,15 @@ describe("Me Query", () => {
     }
   });
 
-  afterEach(async () => {
-    await dropDb();
-  });
-
   it("should get a user", async () => {
-    const user = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: "password",
-    });
-    await em.populate(user, ["collections"]);
-    await em.persistAndFlush(user);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const source = meQuery;
 
     const result = await gqlReq({
       source,
-      userId: user._id,
+      userId: user?._id,
       em,
     });
 
@@ -56,22 +50,16 @@ describe("Me Query", () => {
     const me = result?.data?.me;
 
     expect(me.user).not.toBeNull();
-    expect(me.email).toEqual(user.email);
-    expect(me.username).toEqual(user.username);
+    expect(me.email).toEqual(user?.email);
+    expect(me.username).toEqual(user?.username);
   });
 
   it("should fail to get a user that is not authenticated", async () => {
-    const user = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: "password",
-    });
-
     const source = meQuery;
 
     const result = await gqlReq({
       source,
-      userId: user._id,
+      userId: undefined, // Not authed.
       em,
     });
 
