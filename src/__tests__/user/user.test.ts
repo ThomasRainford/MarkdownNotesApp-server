@@ -4,6 +4,7 @@ import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import { userQuery } from "./utils";
 import { User } from "../../entities/User";
+import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
@@ -16,6 +17,8 @@ describe("User query", () => {
     await application.initTest();
 
     em = application.orm.em.fork();
+
+    await seed(em);
   });
 
   afterAll(async () => {
@@ -30,47 +33,33 @@ describe("User query", () => {
     }
   });
 
-  afterEach(async () => {
-    await dropDb();
-  });
-
   it("should get a user", async () => {
-    const newUser = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: "password",
-    });
-    await em.populate(newUser, ["collections"]);
-    await em.persistAndFlush(newUser);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const userValues = {
-      username: newUser.username,
+      username: user?.username,
     };
 
     const userResult = await gqlReq({
       source: userQuery,
       variableValues: userValues,
       em,
-      userId: newUser._id,
+      userId: user?._id,
     });
 
     console.log(JSON.stringify(userResult));
 
-    const user = userResult?.data?.user;
+    const userData = userResult?.data?.user;
 
-    expect(user).not.toBeNull();
-    expect(user.username).toEqual(newUser.username);
-    expect(user.email).toEqual(newUser.email);
+    expect(userData).not.toBeNull();
+    expect(userData.username).toEqual(user?.username);
+    expect(userData.email).toEqual(user?.email);
   });
 
   it("should fail to get a user.", async () => {
-    const newUser = new User({
-      email: "thomas@mail.net",
-      username: "thomas",
-      password: "password",
-    });
-    await em.populate(newUser, ["collections"]);
-    await em.persistAndFlush(newUser);
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
     const userValues = {
       username: "This username does not exists",
@@ -80,13 +69,13 @@ describe("User query", () => {
       source: userQuery,
       variableValues: userValues,
       em,
-      userId: newUser._id,
+      userId: user?._id,
     });
 
     console.log(JSON.stringify(userResult));
 
-    const user = userResult?.data?.user;
+    const userData = userResult?.data?.user;
 
-    expect(user).toBeNull();
+    expect(userData).toBeNull();
   });
 });

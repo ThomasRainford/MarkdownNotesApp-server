@@ -17,7 +17,7 @@ describe("Register Mutation", () => {
 
     em = application.orm.em.fork();
 
-    await seed(em);
+    await seed(application.orm.em);
   });
 
   afterAll(async () => {
@@ -34,6 +34,7 @@ describe("Register Mutation", () => {
 
   afterEach(async () => {
     await dropDb();
+    await seed(application.orm.em);
   });
 
   it("should register a user successfully", async () => {
