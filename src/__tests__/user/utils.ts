@@ -75,3 +75,9 @@ export const updateUserMutation = `
     }
   }
 `;
+
+export const followMutation = `
+  mutation follow($targetUserId: String!){
+    follow(targetUserId: $targetUserId)
+  }
+`;
