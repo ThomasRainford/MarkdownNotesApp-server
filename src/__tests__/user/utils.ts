@@ -49,3 +49,29 @@ export const loginMutation = `
     }
   }
 `;
+
+export const logoutMutation = `
+  mutation {
+    logout {
+      id
+      email
+      username
+    }
+  }
+`;
+
+export const updateUserMutation = `
+  mutation updateUser($username: String, $password: String){
+    updateUser(username: $username, password: $password) {
+      user {
+        id
+        email
+        username
+      }
+      errors {
+        field
+        message
+      }
+    }
+  }
+`;

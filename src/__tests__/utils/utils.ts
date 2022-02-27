@@ -39,6 +39,7 @@ export const gqlReq = async ({
       req: {
         session: {
           userId,
+          destroy: jest.fn(),
         },
       },
       res: {
