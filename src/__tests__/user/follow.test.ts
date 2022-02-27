@@ -36,6 +36,8 @@ describe("User query", () => {
 
   beforeEach(async () => {
     try {
+      await dropDb();
+      await seed(em);
       em = application.orm.em.fork();
     } catch (error: any) {
       console.log(error);
@@ -64,6 +66,8 @@ describe("User query", () => {
     const followData = followResult?.data?.follow;
 
     expect(followData).toBeTruthy();
+    expect(user?.following).toHaveLength(1);
+    expect(userToFollow?.followers).toHaveLength(1);
   });
 
   // Follow user that does not exists
@@ -88,6 +92,7 @@ describe("User query", () => {
     const followData = followResult?.data?.follow;
 
     expect(followData).toBeFalsy();
+    expect(user?.following).toHaveLength(0);
   });
 
   it("should fail when not logged in", async () => {
@@ -110,5 +115,6 @@ describe("User query", () => {
     const followData = followResult?.data?.follow;
 
     expect(followData).toBeFalsy();
+    expect(userToFollow?.followers).toHaveLength(0);
   });
 });

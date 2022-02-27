@@ -81,3 +81,13 @@ export const followMutation = `
     follow(targetUserId: $targetUserId)
   }
 `;
+
+export const followingQuery = `
+  query following {
+    following {
+      id
+      username
+      followers
+    }
+  }
+`;
