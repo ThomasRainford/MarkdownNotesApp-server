@@ -1,37 +1,37 @@
 export const registerMutation = `
-mutation Register($registerInput: UserRegisterInput!) {
-  register(registerInput: $registerInput) {
-    user {
-      _id
-      email
-      username
-    }
-    errors {
-      field
-      message
+  mutation Register($registerInput: UserRegisterInput!) {
+    register(registerInput: $registerInput) {
+      user {
+        _id
+        email
+        username
+      }
+      errors {
+        field
+        message
+      }
     }
   }
-}
 `;
 
 export const meQuery = `
-query {
-  me {
-    id
-    username
-    email
+  query {
+    me {
+      id
+      username
+      email
+    }
   }
-}
 `;
 
 export const userQuery = `
-query User($username: String!){
-  user(username: $username) {
-    id
-    username
-    email
+  query User($username: String!){
+    user(username: $username) {
+      id
+      username
+      email
+    }
   }
-}
 `;
 
 export const loginMutation = `
@@ -98,6 +98,16 @@ export const followersQuery = `
       id
       username
       following
+    }
+  }
+`;
+
+export const publicNotesQuery = `
+  query PublicNotes($username: String!) {
+    publicNotes(username: $username) {
+      id
+      title
+      visibility
     }
   }
 `;
