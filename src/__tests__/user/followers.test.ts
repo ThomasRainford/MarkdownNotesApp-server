@@ -2,14 +2,14 @@ import Application from "../../application";
 import { dropDb, gqlReq } from "../utils/utils";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
-import { followingQuery } from "./utils";
+import { followersQuery } from "./utils";
 import { User } from "../../entities/User";
 import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
 
-describe("Following query", () => {
+describe("Followers query", () => {
   beforeAll(async () => {
     application = new Application();
 
@@ -41,31 +41,31 @@ describe("Following query", () => {
     }
   });
 
-  it("should get valid list of following users", async () => {
+  it("should get a list of followers", async () => {
     const repo = em.getRepository(User);
     const user = await repo.findOne({ username: "User1" });
+    const userFollower = await repo.findOne({ username: "User2" });
 
-    // Follow a user
-    const userToFollow = await repo.findOne({ username: "User2" });
-    user?.following.push(userToFollow?.id || "");
-    userToFollow?.followers.push(user?.id || "");
+    // A user follows logged in user.
+    userFollower?.following.push(user?.id || "");
+    user?.followers.push(userFollower?.id || "");
 
     if (user) await em.persistAndFlush(user);
 
-    // Call following query
-    const followingResult = await gqlReq({
-      source: followingQuery,
+    // Call followers query
+    const followersResult = await gqlReq({
+      source: followersQuery,
       variableValues: {},
       em,
       userId: user?._id,
     });
 
-    console.log(JSON.stringify(followingResult));
+    console.log(JSON.stringify(followersResult));
 
-    const followingData = followingResult?.data?.following;
+    const followersData = followersResult?.data?.followers;
 
-    expect(followingData).toHaveLength(1);
-    expect(followingData[0].id).toEqual(userToFollow?.id);
-    expect(followingData[0].followers[0]).toEqual(user?.id);
+    expect(followersData).toHaveLength(1);
+    expect(followersData[0].id).toEqual(userFollower?.id);
+    expect(followersData[0].following[0]).toEqual(user?.id);
   });
 });

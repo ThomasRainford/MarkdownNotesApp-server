@@ -10,7 +10,7 @@ import { ObjectId } from "@mikro-orm/mongodb";
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
 
-describe("User query", () => {
+describe("Update user mutation", () => {
   beforeAll(async () => {
     application = new Application();
 

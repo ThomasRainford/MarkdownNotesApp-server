@@ -91,3 +91,13 @@ export const followingQuery = `
     }
   }
 `;
+
+export const followersQuery = `
+  query followers {
+    followers {
+      id
+      username
+      following
+    }
+  }
+`;
