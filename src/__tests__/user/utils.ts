@@ -111,3 +111,19 @@ export const publicNotesQuery = `
     }
   }
 `;
+
+export const savePublicCollectionMutation = `
+  mutation SavePublicCollection($targetUserId: String!, $collectionId: String!) {
+    savePublicCollection(targetUserId: $targetUserId, collectionId: $collectionId) {
+      collection {
+        id
+        title
+        visibility
+      }
+      error {
+        property
+        message
+      }
+    }
+  }
+`;
