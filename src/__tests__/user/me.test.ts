@@ -11,8 +11,6 @@ let em: EntityManager<IDatabaseDriver<Connection>>;
 
 describe("Me Query", () => {
   beforeAll(async () => {
-    jest.setTimeout(60000);
-
     application = new Application();
 
     await application.connect(mikroOrmConfig);

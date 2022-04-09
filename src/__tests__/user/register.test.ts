@@ -10,8 +10,6 @@ let em: EntityManager<IDatabaseDriver<Connection>>;
 
 describe("Register Mutation", () => {
   beforeAll(async () => {
-    jest.setTimeout(60000);
-
     application = new Application();
 
     await application.connect(mikroOrmConfig);
