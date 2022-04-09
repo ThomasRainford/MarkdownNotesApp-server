@@ -178,8 +178,8 @@ describe("SavePublicCollection mutation", () => {
 
     // Note:
     // For some reason if the user with username "User 1" is
-    // not queried then the user with the collection to save
-    // does not have correctly populated collection 🤦‍♂️
+    // not queried, then the user with the collection to save
+    // does not have a correctly populated collection 🤦‍♂️
     console.log(JSON.stringify(spcResult), user?._id);
 
     const spcData = spcResult?.data?.savePublicCollection;

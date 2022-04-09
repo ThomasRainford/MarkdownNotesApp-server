@@ -1,12 +1,15 @@
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import argon2 from "argon2";
+import { NotesList } from "../../entities/NotesList";
+import { Note } from "../../resolvers/object-types/Note";
 import { Collection } from "../../entities/Collection";
 import { User } from "../../entities/User";
 
 export const seed = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
   const users = await createUsers(em);
 
-  createCollections(em, users);
+  await createCollections(em, users);
+  await createNotesLists(em, users);
 };
 
 const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
@@ -71,5 +74,52 @@ const createCollections = async (
     await em.populate(collection3, ["owner", "lists"]);
 
     await em.persistAndFlush([collection1, collection2, collection3]);
+  }
+};
+
+const createNotesLists = async (
+  em: EntityManager<IDatabaseDriver<Connection>>,
+  users: User[]
+) => {
+  const notes = [
+    new Note({ title: "Note 1", body: "Body 1" }),
+    new Note({ title: "Note 2", body: "Body 2" }),
+    new Note({ title: "Note 3", body: "Body 3" }),
+    new Note({ title: "Note 4", body: "Body 4" }),
+  ];
+  for (const user of users) {
+    const collections = user.collections;
+    for (const collection of collections) {
+      const notesList1 = new NotesList({
+        title: "NotesList 1",
+        notes,
+      });
+      const notesList2 = new NotesList({
+        title: "NotesList 2",
+        notes,
+      });
+      const notesList3 = new NotesList({
+        title: "NotesList 3",
+        notes,
+      });
+
+      notesList1.collection = collection;
+      notesList2.collection = collection;
+      notesList3.collection = collection;
+      collection.lists.add(notesList1, notesList2, notesList3);
+      await em.populate(collection, ["owner", "lists"]);
+      await em.populate(notesList1, ["collection"]);
+      await em.populate(notesList2, ["collection"]);
+      await em.populate(notesList3, ["collection"]);
+
+      //console.log(collection);
+
+      await em.persistAndFlush([
+        notesList1,
+        notesList2,
+        notesList3,
+        collection,
+      ]);
+    }
   }
 };
