@@ -11,6 +11,8 @@ let em: EntityManager<IDatabaseDriver<Connection>>;
 
 describe("Login mutation", () => {
   beforeAll(async () => {
+    jest.setTimeout(60000);
+
     application = new Application();
 
     await application.connect(mikroOrmConfig);
