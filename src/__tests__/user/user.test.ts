@@ -2,14 +2,14 @@ import Application from "../../application";
 import { dropDb, gqlReq } from "../utils/utils";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
+import { userQuery } from "./utils";
 import { User } from "../../entities/User";
-import { meQuery } from "./utils";
 import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
 
-describe("Me Query", () => {
+describe("User query", () => {
   beforeAll(async () => {
     application = new Application();
 
@@ -37,36 +37,45 @@ describe("Me Query", () => {
     const repo = em.getRepository(User);
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
-    const source = meQuery;
+    const userValues = {
+      username: user?.username,
+    };
 
-    const result = await gqlReq({
-      source,
-      userId: user?._id,
+    const userResult = await gqlReq({
+      source: userQuery,
+      variableValues: userValues,
       em,
+      userId: user?._id,
     });
 
-    console.log(JSON.stringify(result));
+    console.log(JSON.stringify(userResult));
 
-    const me = result?.data?.me;
+    const userData = userResult?.data?.user;
 
-    expect(me.user).not.toBeNull();
-    expect(me.email).toEqual(user?.email);
-    expect(me.username).toEqual(user?.username);
+    expect(userData).not.toBeNull();
+    expect(userData.username).toEqual(user?.username);
+    expect(userData.email).toEqual(user?.email);
   });
 
-  it("should fail to get a user that is not authenticated", async () => {
-    const source = meQuery;
+  it("should fail to get a user.", async () => {
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
-    const result = await gqlReq({
-      source,
-      userId: undefined, // Not authed.
+    const userValues = {
+      username: "This username does not exists",
+    };
+
+    const userResult = await gqlReq({
+      source: userQuery,
+      variableValues: userValues,
       em,
+      userId: user?._id,
     });
 
-    console.log(JSON.stringify(result));
+    console.log(JSON.stringify(userResult));
 
-    const me = result?.data?.me;
+    const userData = userResult?.data?.user;
 
-    expect(me).toBeNull();
+    expect(userData).toBeNull();
   });
 });

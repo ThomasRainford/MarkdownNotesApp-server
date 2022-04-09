@@ -2,14 +2,14 @@ import Application from "../../application";
 import { dropDb, gqlReq } from "../utils/utils";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
+import { publicNotesQuery } from "./utils";
 import { User } from "../../entities/User";
-import { meQuery } from "./utils";
 import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
 
-describe("Me Query", () => {
+describe("Followers query", () => {
   beforeAll(async () => {
     application = new Application();
 
@@ -33,40 +33,36 @@ describe("Me Query", () => {
     }
   });
 
-  it("should get a user", async () => {
-    const repo = em.getRepository(User);
-    const user = await repo.findOne({ username: "User1" }, ["collections"]);
-
-    const source = meQuery;
-
-    const result = await gqlReq({
-      source,
-      userId: user?._id,
-      em,
-    });
-
-    console.log(JSON.stringify(result));
-
-    const me = result?.data?.me;
-
-    expect(me.user).not.toBeNull();
-    expect(me.email).toEqual(user?.email);
-    expect(me.username).toEqual(user?.username);
+  beforeEach(async () => {
+    try {
+      em = application.orm.em.fork();
+    } catch (error: any) {
+      console.log(error);
+    }
   });
 
-  it("should fail to get a user that is not authenticated", async () => {
-    const source = meQuery;
+  it("should get a users list of public notes", async () => {
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" });
 
-    const result = await gqlReq({
-      source,
-      userId: undefined, // Not authed.
+    const variableValues = {
+      username: "User2",
+    };
+
+    // Call publicNotes query
+    const publicNotesResult = await gqlReq({
+      source: publicNotesQuery,
+      variableValues,
       em,
+      userId: user?._id,
     });
 
-    console.log(JSON.stringify(result));
+    console.log(JSON.stringify(publicNotesResult));
 
-    const me = result?.data?.me;
+    const publicNotesData = publicNotesResult?.data?.publicNotes;
 
-    expect(me).toBeNull();
+    expect(publicNotesData).toHaveLength(2);
+    expect(publicNotesData[0].visibility).toEqual("public");
+    expect(publicNotesData[1].visibility).toEqual("public");
   });
 });

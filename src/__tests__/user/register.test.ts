@@ -3,6 +3,7 @@ import { dropDb, gqlReq } from "../utils/utils";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import { registerMutation } from "./utils";
+import { seed } from "../utils/seeder";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
@@ -15,6 +16,8 @@ describe("Register Mutation", () => {
     await application.initTest();
 
     em = application.orm.em.fork();
+
+    await seed(application.orm.em);
   });
 
   afterAll(async () => {
@@ -31,6 +34,7 @@ describe("Register Mutation", () => {
 
   afterEach(async () => {
     await dropDb();
+    await seed(application.orm.em);
   });
 
   it("should register a user successfully", async () => {
@@ -55,8 +59,10 @@ describe("Register Mutation", () => {
     const register = result?.data?.register;
 
     expect(register.user).not.toBeNull();
-    expect(register.user.email).toEqual("thomas@mail.net");
-    expect(register.user.username).toEqual("thomas");
+    expect(register.user.email).toEqual(variableValues.registerInput.email);
+    expect(register.user.username).toEqual(
+      variableValues.registerInput.username
+    );
     expect(register.errors).toBeNull();
   });
 
@@ -88,5 +94,10 @@ describe("Register Mutation", () => {
 
     expect(firstRegister.user).not.toBeNull();
     expect(secondRegister.user).toBeNull();
+    expect(secondRegister.errors).toHaveLength(1);
+    expect(secondRegister.errors[0]).toEqual({
+      field: "registerInput",
+      message: "Already registered",
+    });
   });
 });

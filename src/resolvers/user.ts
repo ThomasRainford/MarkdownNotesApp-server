@@ -63,6 +63,7 @@ export class UserResolver {
 
     const hasUserName = await repo.findOne({ username });
     const hasUserEmail = await repo.findOne({ email });
+
     if (hasUserName || hasUserEmail) {
       return {
         errors: [
@@ -80,6 +81,7 @@ export class UserResolver {
       username,
       password: hashedPassword,
     });
+
     await em.populate(user, ["collections"]);
 
     await em.persistAndFlush(user);
