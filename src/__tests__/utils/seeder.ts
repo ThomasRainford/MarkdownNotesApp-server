@@ -112,8 +112,6 @@ const createNotesLists = async (
       await em.populate(notesList2, ["collection"]);
       await em.populate(notesList3, ["collection"]);
 
-      //console.log(collection);
-
       await em.persistAndFlush([
         notesList1,
         notesList2,
