@@ -29,3 +29,22 @@ mutation AddNote($listLocation: ListLocationInput!, $noteInput: NoteInput!) {
   }
 }
 `;
+
+export const notesListQuery = `
+query NotesList($listLocation: ListLocationInput!) {
+  notesList(listLocation: $listLocation) {
+      id
+      title
+      notes {
+         title
+      }
+      collection {
+          id
+          title
+          lists {
+              title
+          }
+      }
+  }
+}
+`;
