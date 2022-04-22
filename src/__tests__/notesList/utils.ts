@@ -1,4 +1,4 @@
-export const createNotesListsQuery = `
+export const createNotesListsMutation = `
 mutation CreateNotesList($collectionId: String!, $title: String!){
   createNotesList(collectionId: $collectionId, title: $title) {
     notesList {
@@ -11,6 +11,21 @@ mutation CreateNotesList($collectionId: String!, $title: String!){
         property
         message
     }
+  }
+}
+`;
+
+export const addNoteMutation = `
+mutation AddNote($listLocation: ListLocationInput!, $noteInput: NoteInput!) {
+  addNote(listLocation: $listLocation, noteInput: $noteInput) {
+      note {
+          title
+          body
+      }
+      error {
+          property
+          message
+      }
   }
 }
 `;

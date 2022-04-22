@@ -84,13 +84,23 @@ export class NotesListResolver {
       { id: collectionId, owner: req.session.userId },
       ["owner", "lists"]
     );
+
+    if (!collection) {
+      return {
+        error: {
+          property: "collection",
+          message: "Collection not found",
+        },
+      };
+    }
+
     const notesList = await notesListRepo.findOne({ id: listId, collection });
 
     if (!notesList) {
       return {
         error: {
           property: "notesList",
-          message: "Notes list note found",
+          message: "Notes list not found",
         },
       };
     }

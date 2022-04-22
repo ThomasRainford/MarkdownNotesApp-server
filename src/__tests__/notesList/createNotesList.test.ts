@@ -4,7 +4,7 @@ import Application from "../../application";
 import mikroOrmConfig from "../utils/mikro-orm.config";
 import { seed } from "../utils/seeder";
 import { dropDb, gqlReq } from "../utils/utils";
-import { createNotesListsQuery } from "./utils";
+import { createNotesListsMutation } from "./utils";
 import { User } from "../../entities/User";
 
 let application: Application;
@@ -52,7 +52,7 @@ describe("CreateNotesList Mutation", () => {
     };
 
     const result = await gqlReq({
-      source: createNotesListsQuery,
+      source: createNotesListsMutation,
       variableValues,
       em,
       userId: user?._id,
@@ -77,7 +77,7 @@ describe("CreateNotesList Mutation", () => {
     };
 
     const result = await gqlReq({
-      source: createNotesListsQuery,
+      source: createNotesListsMutation,
       variableValues,
       em,
       userId: user?._id,
