@@ -41,8 +41,14 @@ describe("NotesList Query", () => {
     const listRepo = em.getRepository(NotesList);
 
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
-    const collection = await collectionRepo.findOne({ title: "Collection 1" });
-    const list = await listRepo.findOne({ title: "NotesList 1" });
+    const collection = await collectionRepo.findOne({
+      title: "Collection 1",
+      owner: user?._id,
+    });
+    const list = await listRepo.findOne({
+      title: "NotesList 1",
+      collection: collection?._id,
+    });
 
     const variableValues = {
       listLocation: {
@@ -74,7 +80,10 @@ describe("NotesList Query", () => {
     const listRepo = em.getRepository(NotesList);
 
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
-    const list = await listRepo.findOne({ title: "NotesList 1" });
+    const list = await listRepo.findOne({
+      title: "NotesList 1",
+      collection: user?.collections[0]._id,
+    });
 
     const variableValues = {
       listLocation: {
@@ -102,7 +111,10 @@ describe("NotesList Query", () => {
     const collectionRepo = em.getRepository(Collection);
 
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
-    const collection = await collectionRepo.findOne({ title: "Collection 1" });
+    const collection = await collectionRepo.findOne({
+      title: "Collection 1",
+      owner: user?._id,
+    });
 
     const variableValues = {
       listLocation: {

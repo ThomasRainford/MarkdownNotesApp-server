@@ -8,8 +8,8 @@ mutation CreateNotesList($collectionId: String!, $title: String!){
       }
     }
     error {
-        property
-        message
+      property
+      message
     }
   }
 }
@@ -18,14 +18,14 @@ mutation CreateNotesList($collectionId: String!, $title: String!){
 export const addNoteMutation = `
 mutation AddNote($listLocation: ListLocationInput!, $noteInput: NoteInput!) {
   addNote(listLocation: $listLocation, noteInput: $noteInput) {
-      note {
-          title
-          body
-      }
-      error {
-          property
-          message
-      }
+    note {
+      title
+      body
+    }
+    error {
+      property
+      message
+    }
   }
 }
 `;
@@ -33,18 +33,31 @@ mutation AddNote($listLocation: ListLocationInput!, $noteInput: NoteInput!) {
 export const notesListQuery = `
 query NotesList($listLocation: ListLocationInput!) {
   notesList(listLocation: $listLocation) {
+    id
+    title
+    notes {
+      title
+    }
+    collection {
       id
       title
-      notes {
-         title
+      lists {
+        title
       }
-      collection {
-          id
-          title
-          lists {
-              title
-          }
-      }
+    }
+  }
+}
+`;
+
+export const notesListsQuery = `
+query NotesLists($collectionId: String!) {
+  notesLists(collectionId: $collectionId) {
+    id
+    title
+    notes {
+      id
+      title
+    }
   }
 }
 `;

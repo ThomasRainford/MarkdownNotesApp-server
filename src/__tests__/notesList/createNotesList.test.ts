@@ -44,7 +44,10 @@ describe("CreateNotesList Mutation", () => {
     const collectionRepo = em.getRepository(Collection);
 
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
-    const collection = await collectionRepo.findOne({ title: "Collection 1" });
+    const collection = await collectionRepo.findOne({
+      title: "Collection 1",
+      owner: user?._id,
+    });
 
     const variableValues = {
       collectionId: collection?.id,
