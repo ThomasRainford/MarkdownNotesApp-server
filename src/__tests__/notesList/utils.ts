@@ -77,3 +77,18 @@ query Note($noteLocation: NoteLocationInput!) {
   }
 }
 `;
+
+export const updateNotesListMutation = `
+mutation UpdateNotesList($listLocation: ListLocationInput!, $notesListInput: NotesListUpdateInput!) {
+  updateNotesList(listLocation: $listLocation, notesListInput: $notesListInput) {
+      notesList {
+          id
+          title
+      }
+      error {
+          property
+          message
+      }
+  }
+}
+`;
