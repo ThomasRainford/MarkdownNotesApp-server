@@ -185,7 +185,7 @@ export class NotesListResolver {
       ["collection"]
     );
 
-    if (!collection && !notesList) {
+    if (!collection || !notesList) {
       return {
         error: {
           property: "location",
@@ -203,7 +203,7 @@ export class NotesListResolver {
       return {
         error: {
           property: "note",
-          message: "Note found.",
+          message: "Note not found.",
         },
       };
     }

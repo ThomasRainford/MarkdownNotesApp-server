@@ -61,3 +61,19 @@ query NotesLists($collectionId: String!) {
   }
 }
 `;
+
+export const noteQuery = `
+query Note($noteLocation: NoteLocationInput!) {
+  note(noteLocation: $noteLocation) {
+    note {
+      id
+      title
+      body
+    }
+    error {
+      property
+      message
+    }
+  }
+}
+`;
