@@ -416,6 +416,15 @@ export class NotesListResolver {
     @Arg("newCollectionId") newCollectionId: string,
     @Ctx() { em, req }: OrmContext
   ): Promise<NotesListResponse> {
+    if (listLocation.collectionId === newCollectionId) {
+      return {
+        error: {
+          property: "listLocation.collectionId && newCollectionId",
+          message: "Source and target collections cannot be the same.",
+        },
+      };
+    }
+
     const collectionRepo = em.getRepository(Collection);
     const notesListRepo = em.getRepository(NotesList);
 

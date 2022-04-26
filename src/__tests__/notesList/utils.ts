@@ -81,14 +81,14 @@ query Note($noteLocation: NoteLocationInput!) {
 export const updateNotesListMutation = `
 mutation UpdateNotesList($listLocation: ListLocationInput!, $notesListInput: NotesListUpdateInput!) {
   updateNotesList(listLocation: $listLocation, notesListInput: $notesListInput) {
-      notesList {
-          id
-          title
-      }
-      error {
-          property
-          message
-      }
+    notesList {
+      id
+      title
+    }
+    error {
+      property
+      message
+    }
   }
 }
 `;
@@ -96,15 +96,15 @@ mutation UpdateNotesList($listLocation: ListLocationInput!, $notesListInput: Not
 export const updateNoteMutation = `
 mutation UpdateNote($noteLocation: NoteLocationInput!, $noteInput: NoteUpdateInput!) {
   updateNote(noteLocaton: $noteLocation, noteInput: $noteInput) {
-      note {
-          id
-          title
-          body
-      }
-      error {
-          property
-          message
-      }
+    note {
+      id
+      title
+      body
+    }
+    error {
+      property
+      message
+    }
   }
 }
 `;
@@ -118,4 +118,22 @@ mutation DeleteNotesList($listLocation: ListLocationInput!) {
 export const deleteNoteMutation = `
 mutation DeleteNote($noteLocation: NoteLocationInput!) {
   deleteNote(noteLocation: $noteLocation)
+}`;
+
+export const moveListMutation = `
+mutation MoveList($listLocation: ListLocationInput!, $newCollectionId: String!) {
+  moveList(listLocation: $listLocation, newCollectionId: $newCollectionId) {
+    notesList {
+      id
+      title
+      collection {
+        id
+        title
+      }
+    }
+    error {
+      property
+      message
+    }
+  }
 }`;
