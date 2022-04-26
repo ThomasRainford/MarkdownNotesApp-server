@@ -108,3 +108,9 @@ mutation UpdateNote($noteLocation: NoteLocationInput!, $noteInput: NoteUpdateInp
   }
 }
 `;
+
+export const deleteNotesListMutation = `
+mutation DeleteNotesList($listLocation: ListLocationInput!) {
+  deleteNotesList(listLocation: $listLocation)
+}
+`;
