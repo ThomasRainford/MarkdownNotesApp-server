@@ -92,3 +92,19 @@ mutation UpdateNotesList($listLocation: ListLocationInput!, $notesListInput: Not
   }
 }
 `;
+
+export const updateNoteMutation = `
+mutation UpdateNote($noteLocation: NoteLocationInput!, $noteInput: NoteUpdateInput!) {
+  updateNote(noteLocaton: $noteLocation, noteInput: $noteInput) {
+      note {
+          id
+          title
+          body
+      }
+      error {
+          property
+          message
+      }
+  }
+}
+`;
