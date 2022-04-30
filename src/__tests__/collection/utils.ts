@@ -4,7 +4,12 @@ mutation CreateCollection($title: String!, $visibility: String!) {
       collection {
           id
           title
+          visibility
       }
+      error {
+        property
+        message
+    }
   }
 }`;
 
