@@ -83,7 +83,7 @@ export class CollectionResolver {
       return {
         error: {
           property: "collection",
-          message: "Collection does not exisit.",
+          message: "Collection does not exist.",
         },
       };
     }
@@ -173,13 +173,13 @@ export class CollectionResolver {
   @Mutation(() => CollectionResponse)
   @UseMiddleware(isAuth)
   async vote(
-    @Arg("collectionId") collectionId: string,
+    @Arg("id") id: string,
     @Ctx() { em, req }: OrmContext
   ): Promise<CollectionResponse> {
     const collectionRepo = em.getRepository(Collection);
     const userRepo = em.getRepository(User);
 
-    const collection = await collectionRepo.findOne({ id: collectionId });
+    const collection = await collectionRepo.findOne({ id });
 
     if (!collection) {
       return {
@@ -205,14 +205,14 @@ export class CollectionResolver {
 
     // Remove vote if already voted.
     // Otherwise add vote.
-    if (me?.upvoted.includes(collectionId)) {
+    if (me?.upvoted.includes(id)) {
       collection.upvotes--;
       me.upvoted = me.upvoted.filter((id) => {
-        return id !== collectionId;
+        return id !== id;
       });
     } else {
       collection.upvotes++;
-      me.upvoted.push(collectionId);
+      me.upvoted.push(id);
     }
 
     await em.persistAndFlush(collection);
