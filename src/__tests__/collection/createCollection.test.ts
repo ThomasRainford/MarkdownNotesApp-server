@@ -10,7 +10,7 @@ import { Collection } from "../../entities/Collection";
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
 
-describe("CreateNotesList Mutation", () => {
+describe("CreateCollection Mutation", () => {
   beforeAll(async () => {
     application = new Application();
 

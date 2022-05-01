@@ -19,14 +19,6 @@ query collection($id: String, $title: String) {
       collection {
           id
           title
-          owner {
-              id
-              username
-          }
-          lists {
-              id
-              title
-          }
       }
       error {
           property

@@ -41,6 +41,7 @@
     "@mikro-orm/core": "^4.3.4",
     "@mikro-orm/mongo-highlighter": "^1.0.0",
     "@mikro-orm/mongodb": "^4.3.4",
+    "@mikro-orm/reflection": "^5.1.3",
     "apollo-server-express": "^2.19.0",
     "argon2": "^0.27.1",
     "connect-mongodb-session": "^2.4.1",
