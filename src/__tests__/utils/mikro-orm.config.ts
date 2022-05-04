@@ -3,8 +3,10 @@ import { MongoHighlighter } from "@mikro-orm/mongo-highlighter";
 import { Collection } from "../../entities/Collection";
 import { NotesList } from "../../entities/NotesList";
 import { User } from "../../entities/User";
+import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 
 export default {
+  metadataProvider: TsMorphMetadataProvider,
   entities: [User, Collection, NotesList],
   dbName: "testing-db",
   type: "mongo",
