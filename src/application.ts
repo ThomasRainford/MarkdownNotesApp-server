@@ -51,7 +51,10 @@ export default class Application {
     this.host.use(
       cors({
         origin: __prod__
-          ? process.env.CORS_ORIGIN
+          ? ([
+              process.env.CORS_ORIGIN,
+              process.env.CORS_ORIGIN_TEST,
+            ] as string[])
           : process.env.CORS_ORIGIN_DEV,
         credentials: true,
       })
@@ -68,12 +71,12 @@ export default class Application {
         cookie: {
           maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
           httpOnly: true,
-          sameSite: __prod__ ? "none" : "lax", // csrf
+          sameSite: false,
           secure: __prod__, // cookie only works in https
-          //domain: __prod__ ? "http://localhost:4000/account/login" : undefined
+          domain: __prod__ ? "" : "http://localhost:4000/account/login",
         },
         saveUninitialized: false,
-        secret: process.env.SESSION_SECRET,
+        secret: process.env.SESSION_SECRET || "",
         resave: false,
       })
     );
@@ -110,7 +113,10 @@ export default class Application {
     this.host.use(
       cors({
         origin: __prod__
-          ? process.env.CORS_ORIGIN
+          ? ([
+              process.env.CORS_ORIGIN,
+              process.env.CORS_ORIGIN_TEST,
+            ] as string[])
           : process.env.CORS_ORIGIN_DEV,
         credentials: true,
       })
@@ -132,7 +138,7 @@ export default class Application {
           //domain: __prod__ ? "http://localhost:4000/account/login" : undefined
         },
         saveUninitialized: false,
-        secret: process.env.SESSION_SECRET,
+        secret: process.env.SESSION_SECRET || "",
         resave: false,
       })
     );
