@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "dev": "nodemon dist/index.js",
+    "dev": "nodemon src/index.ts",
     "start": "node dist/index.js",
     "lint": "eslint src --quiet --fix",
     "gen-env-types": "npx gen-env-types .env -o src/types/env.d.ts -e .",
@@ -47,6 +47,7 @@
     "connect-mongodb-session": "^2.4.1",
     "connect-redis": "^5.0.0",
     "cors": "^2.8.5",
+    "custom-env": "^2.0.1",
     "dotenv-safe": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",

@@ -51,7 +51,7 @@ export const gqlReq = async ({
 };
 
 export const dropDb = async () => {
-  const url = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`;
+  const url = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}`;
 
   const connection = await MongoClient.connect(url);
   const db = connection.db("testing-db");

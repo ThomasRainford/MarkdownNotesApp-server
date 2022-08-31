@@ -3,6 +3,7 @@ import { MongoHighlighter } from "@mikro-orm/mongo-highlighter";
 import { Collection } from "./entities/Collection";
 import { NotesList } from "./entities/NotesList";
 import { User } from "./entities/User";
+require("custom-env").env("development");
 
 export default {
   entities: [User, Collection, NotesList],
