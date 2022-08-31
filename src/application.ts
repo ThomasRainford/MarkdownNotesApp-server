@@ -66,7 +66,9 @@ export default class Application {
           httpOnly: true,
           sameSite: false,
           secure: __prod__, // cookie only works in https
-          domain: __prod__ ? "" : "http://localhost:4000/account/login",
+          domain: __prod__
+            ? process.env.CLIENT_DOMAIN
+            : "http://localhost:4000/account/login",
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET || "",
