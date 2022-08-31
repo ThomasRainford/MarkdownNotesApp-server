@@ -6,7 +6,7 @@ import {
   Options,
 } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
-import "dotenv-safe/config";
+//import "dotenv-safe/config";
 import express from "express";
 import session from "express-session";
 import "reflect-metadata";
@@ -21,9 +21,7 @@ import cors from "cors";
 import { Server } from "http";
 const MongoStore = MongoDBStore(session);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("dotenv-safe").config({
-  allowEmptyValues: true,
-});
+require("custom-env").env("development");
 
 export default class Application {
   public orm: MikroORM<IDatabaseDriver<Connection>>;
@@ -50,12 +48,7 @@ export default class Application {
     this.host.set("trust proxy", 1);
     this.host.use(
       cors({
-        origin: __prod__
-          ? ([
-              process.env.CORS_ORIGIN,
-              process.env.CORS_ORIGIN_TEST,
-            ] as string[])
-          : process.env.CORS_ORIGIN_DEV,
+        origin: process.env.CORS_ORIGIN,
         credentials: true,
       })
     );
@@ -99,6 +92,7 @@ export default class Application {
     });
 
     const port = process.env.PORT || 3000;
+    console.log(process.env.NODE_ENV);
     this.expressServer = this.host.listen(port, () => {
       console.log(`Server started on port ${port}.`);
       console.log(
@@ -112,12 +106,7 @@ export default class Application {
     this.host.set("trust proxy", 1);
     this.host.use(
       cors({
-        origin: __prod__
-          ? ([
-              process.env.CORS_ORIGIN,
-              process.env.CORS_ORIGIN_TEST,
-            ] as string[])
-          : process.env.CORS_ORIGIN_DEV,
+        origin: process.env.CORS_ORIGIN,
         credentials: true,
       })
     );
@@ -126,7 +115,7 @@ export default class Application {
       session({
         name: COOKIE_NAME,
         store: new MongoStore({
-          uri: `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST_TEST}`,
+          uri: `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}`,
           databaseName: "testing-db",
           collection: "sessions",
         }),
@@ -161,6 +150,7 @@ export default class Application {
     });
 
     const port = process.env.PORT || 3001;
+    console.log(process.env.NODE_ENV);
     this.expressServer = this.host.listen(port);
   };
 }
