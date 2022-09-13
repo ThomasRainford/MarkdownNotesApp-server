@@ -48,7 +48,7 @@ export default class Application {
     this.host.set("trust proxy", 1);
     this.host.use(
       cors({
-        origin: process.env.CORS_ORIGIN,
+        origin: ["http://localhost:4000", /\.vercel\.app$/],
         credentials: true,
       })
     );
