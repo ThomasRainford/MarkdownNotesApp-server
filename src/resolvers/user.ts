@@ -54,7 +54,6 @@ export class UserResolver {
   ): Promise<UserResponse> {
     const { email, username, password } = registerInput;
     const repo = em.getRepository(User);
-
     // Validate register info.
     const errors: UserResponse | null = validateRegister(registerInput);
     if (errors) {

@@ -7,7 +7,7 @@ require("custom-env").env("development");
 
 export default {
   entities: [User, Collection, NotesList],
-  dbName: "markdown-notes-db",
+  dbName: process.env.MONGO_DB_NAME,
   type: "mongo",
   clientUrl: `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}`,
   highlighter: new MongoHighlighter(),

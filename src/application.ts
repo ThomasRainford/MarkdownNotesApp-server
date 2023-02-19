@@ -93,6 +93,7 @@ export default class Application {
 
     const port = process.env.PORT || 3000;
     console.log(process.env.NODE_ENV);
+    console.log(process.env.MONGO_HOST);
     this.expressServer = this.host.listen(port, () => {
       console.log(`Server started on port ${port}.`);
       console.log(
