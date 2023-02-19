@@ -11,7 +11,7 @@ import {
 import { Collection } from "../entities/Collection";
 import { CollectionResponse } from "./object-types/CollectionResponse";
 import { validateVisibility } from "../utils/validateVisibility";
-import { validateTitle } from "../utils/validateTitle";
+import { validateCollectionTitle } from "../utils/validateTitle";
 import { isAuth } from "../middleware/isAuth";
 import { CollectionUpdateInput } from "./input-types/CollectionUpdateInput";
 
@@ -31,11 +31,10 @@ export class CollectionResolver {
       };
     }
 
-    const titleError = await validateTitle(
+    const titleError = await validateCollectionTitle(
       req.session.userId,
       title,
       Collection,
-      "collection",
       em
     );
     if (titleError) {

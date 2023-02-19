@@ -77,7 +77,7 @@ describe("CreateCollection Mutation", () => {
     }).toEqual(variableValues);
   });
 
-  it("should create a new collection successfully.", async () => {
+  it("should fail to create a new collection with duplicate collection title.", async () => {
     const repo = em.getRepository(User);
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
 
@@ -102,6 +102,34 @@ describe("CreateCollection Mutation", () => {
     expect(createCollection.error).toEqual({
       property: "title",
       message: `Collection with title '${variableValues.title}' already exisits.`,
+    });
+  });
+
+  it("should fail to create a new collection with empty title", async () => {
+    const repo = em.getRepository(User);
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
+
+    const variableValues = {
+      title: "", // This title already exists
+      visibility: "public",
+    };
+
+    const result = await gqlReq({
+      source: createCollectionMutation,
+      variableValues,
+      em,
+      userId: user?._id,
+    });
+
+    console.log(JSON.stringify(result));
+
+    const createCollection = result?.data?.createCollection;
+
+    expect(createCollection.collection).toBeNull();
+    expect(createCollection.error).not.toBeNull();
+    expect(createCollection.error).toEqual({
+      property: "title",
+      message: "'title' cannot be empty.",
     });
   });
 });

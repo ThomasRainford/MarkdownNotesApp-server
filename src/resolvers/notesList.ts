@@ -18,7 +18,7 @@ import { ListLocationInput } from "./input-types/ListLocationInput";
 import { NoteLocationInput } from "./input-types/NoteLocationInput";
 import { NoteUpdateInput } from "./input-types/NoteUpdateInput";
 import { NotesListUpdateInput } from "./input-types/NotesListUpdateInput";
-import { validateTitle } from "../utils/validateTitle";
+import { validateNotesListTitle } from "../utils/validateTitle";
 
 @Resolver(NotesList)
 export class NotesListResolver {
@@ -31,23 +31,21 @@ export class NotesListResolver {
     @Arg("title") title: string,
     @Ctx() { em, req }: OrmContext
   ): Promise<NotesListResponse> {
-    const titleError = await validateTitle(
-      req.session.userId,
+    const collectionRepo = em.getRepository(Collection);
+    const collection = await collectionRepo.findOne(
+      { id: collectionId, owner: req.session.userId },
+      ["owner", "lists"]
+    );
+
+    const titleError = await validateNotesListTitle(
+      collection,
       title,
       NotesList,
-      "noteslist",
       em
     );
     if (titleError) {
       return { error: titleError };
     }
-
-    const collectionRepo = em.getRepository(Collection);
-
-    const collection = await collectionRepo.findOne(
-      { id: collectionId, owner: req.session.userId },
-      ["owner", "lists"]
-    );
 
     if (!collection) {
       return {
@@ -196,7 +194,6 @@ export class NotesListResolver {
     }
 
     const note: Note | undefined = notesList?.notes.find((n) => {
-      console.log(n);
       return n.id === noteId;
     });
 
