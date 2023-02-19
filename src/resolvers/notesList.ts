@@ -18,7 +18,10 @@ import { ListLocationInput } from "./input-types/ListLocationInput";
 import { NoteLocationInput } from "./input-types/NoteLocationInput";
 import { NoteUpdateInput } from "./input-types/NoteUpdateInput";
 import { NotesListUpdateInput } from "./input-types/NotesListUpdateInput";
-import { validateNotesListTitle } from "../utils/validateTitle";
+import {
+  validateNotesListTitle,
+  validateNoteTitle,
+} from "../utils/validateTitle";
 
 @Resolver(NotesList)
 export class NotesListResolver {
@@ -74,6 +77,13 @@ export class NotesListResolver {
     @Arg("noteInput") noteInput: NoteInput,
     @Ctx() { em, req }: OrmContext
   ): Promise<NoteResponse> {
+    const titeError = validateNoteTitle(noteInput.title);
+    if (titeError) {
+      return {
+        error: titeError,
+      };
+    }
+
     const { collectionId, listId } = listLocation;
 
     const notesListRepo = em.getRepository(NotesList);

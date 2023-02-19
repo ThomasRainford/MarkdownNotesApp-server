@@ -63,3 +63,13 @@ export const validateNotesListTitle = async (
 
   return null;
 };
+
+export const validateNoteTitle = (title: string) => {
+  if (title === "") {
+    return {
+      property: "noteInput.title",
+      message: "'title' cannot be empty.",
+    };
+  }
+  return null;
+};
