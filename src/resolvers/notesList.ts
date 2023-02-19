@@ -35,6 +35,7 @@ export class NotesListResolver {
       req.session.userId,
       title,
       NotesList,
+      "noteslist",
       em
     );
     if (titleError) {

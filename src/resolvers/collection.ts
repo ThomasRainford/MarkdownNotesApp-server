@@ -35,6 +35,7 @@ export class CollectionResolver {
       req.session.userId,
       title,
       Collection,
+      "collection",
       em
     );
     if (titleError) {
