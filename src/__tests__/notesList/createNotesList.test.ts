@@ -69,7 +69,7 @@ describe("CreateNotesList Mutation", () => {
     expect(createNotesList.error).toBeNull();
   });
 
-  it("should fail a new noteslist.", async () => {
+  it("should fail to create a new noteslist with a collection that doesn't exist.", async () => {
     const repo = em.getRepository(User);
 
     const user = await repo.findOne({ username: "User1" }, ["collections"]);
@@ -92,5 +92,70 @@ describe("CreateNotesList Mutation", () => {
 
     expect(createNotesList.notesList).toBeNull();
     expect(createNotesList.error).not.toBeNull();
+    expect(createNotesList.error).toEqual({
+      property: "collectionId",
+      message: "Collection not found.",
+    });
+  });
+
+  it("should fail to create a new noteslist with a duplicate notesList title.", async () => {
+    const repo = em.getRepository(User);
+    const collectionRepo = em.getRepository(Collection);
+
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
+    const collection = await collectionRepo.findOne({
+      title: "Collection 1",
+    });
+    const variableValues = {
+      collectionId: collection?.id,
+      title: "NotesList 3",
+    };
+
+    const result = await gqlReq({
+      source: createNotesListsMutation,
+      variableValues,
+      em,
+      userId: user?._id,
+    });
+
+    console.log(JSON.stringify(result));
+
+    const createNotesList = result?.data?.createNotesList;
+
+    expect(createNotesList.notesList).toBeNull();
+    expect(createNotesList.error).not.toBeNull();
+    expect(createNotesList.error).toEqual({
+      property: "title",
+      message: `NotesList with title '${variableValues.title}' already exisits.`,
+    });
+  });
+
+  it("should fail to create a new noteslist with an empty title.", async () => {
+    const repo = em.getRepository(User);
+
+    const user = await repo.findOne({ username: "User1" }, ["collections"]);
+
+    const variableValues = {
+      collectionId: "a-collection-that-doesn't-exist",
+      title: "",
+    };
+
+    const result = await gqlReq({
+      source: createNotesListsMutation,
+      variableValues,
+      em,
+      userId: user?._id,
+    });
+
+    console.log(JSON.stringify(result));
+
+    const createNotesList = result?.data?.createNotesList;
+
+    expect(createNotesList.notesList).toBeNull();
+    expect(createNotesList.error).not.toBeNull();
+    expect(createNotesList.error).toEqual({
+      property: "title",
+      message: "'title' cannot be empty.",
+    });
   });
 });

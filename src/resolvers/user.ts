@@ -256,7 +256,6 @@ export class UserResolver {
       targetUser.followers = targetUser.followers.filter((value: string) => {
         return value !== meId;
       });
-      console.log(me.following);
       return false;
     } else {
       me.following.push(targetUserId);
