@@ -19,6 +19,8 @@ import { UserRegisterInput } from "./input-types/UserRegisterInput";
 import { ActivityFeedResponse } from "./object-types/ActivityFeedResponse";
 import { CollectionResponse } from "./object-types/CollectionResponse";
 import { UserResponse } from "./object-types/UserResponse";
+import { NotesList } from "../entities/NotesList";
+import { Note } from "./object-types/Note";
 
 @Resolver(User)
 export class UserResolver {
@@ -366,7 +368,7 @@ export class UserResolver {
 
     const publicCollections = await collectionsRepo.find(
       { owner: targetUserId },
-      { filters: ["visibility"] }
+      { filters: ["visibility"], populate: ["lists"] }
     );
 
     if (publicCollections.length === 0) {
@@ -382,7 +384,6 @@ export class UserResolver {
     const collectionToAdd = publicCollections.find(
       (collection) => collection.id === collectionId
     );
-
     if (!collectionToAdd) {
       return {
         error: {
@@ -406,10 +407,22 @@ export class UserResolver {
       };
     }
 
-    const { title, visibility } = collectionToAdd;
+    const { title, visibility, lists, upvotes } = collectionToAdd;
     const collection = new Collection({ title, visibility });
 
     collection.owner = me;
+    // Create copies of the collectionToAdd lists and notes.
+    collection.lists.removeAll();
+    const newLists = lists.toArray().map((list) => {
+      const notes = list.notes.map((note: Note) => {
+        return new Note({ title: note.title, body: note.body });
+      });
+      return new NotesList({ title: list.title, notes });
+    });
+    newLists.forEach((list) => {
+      collection.lists.add(list);
+    });
+    collection.upvotes = upvotes;
     me.collections.add(collection);
     await em.populate(collection, ["owner", "lists"]);
 
