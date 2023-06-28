@@ -235,7 +235,7 @@ export class UserResolver {
   async follow(
     @Arg("targetUserId") targetUserId: string,
     @Ctx() { em, req }: OrmContext
-  ): Promise<boolean> {
+  ): Promise<boolean | null> {
     const repo = em.getRepository(User);
 
     if (!req.session.userId) {
@@ -243,6 +243,11 @@ export class UserResolver {
     }
 
     const meId = req.session["userId"].toString();
+
+    // Don't follow self.
+    if (meId === targetUserId) {
+      return null;
+    }
 
     const me = await repo.findOne({ id: meId });
     const targetUser = await repo.findOne({ id: targetUserId });
@@ -314,6 +319,62 @@ export class UserResolver {
     }
 
     const followers = me.followers;
+
+    const allFollowers = followers.map(async (userId) => {
+      const user = await repo.findOne({ id: userId });
+      return user;
+    });
+
+    return allFollowers;
+  }
+
+  @Query(() => [User])
+  @UseMiddleware(isAuth)
+  async userFollowing(
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<Promise<User | null>[] | null> {
+    const repo = em.getRepository(User);
+
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await repo.findOne({ id: userId.toString() });
+
+    if (!user) {
+      return null;
+    }
+
+    const following = user.following;
+
+    const allFollowing = following.map(async (userId) => {
+      const user = await repo.findOne({ id: userId });
+      return user;
+    });
+
+    return allFollowing;
+  }
+
+  @Query(() => [User])
+  @UseMiddleware(isAuth)
+  async userFollowers(
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<Promise<User | null>[] | null> {
+    const repo = em.getRepository(User);
+
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await repo.findOne({ id: userId.toString() });
+
+    if (!user) {
+      return null;
+    }
+
+    const followers = user.followers;
 
     const allFollowers = followers.map(async (userId) => {
       const user = await repo.findOne({ id: userId });
