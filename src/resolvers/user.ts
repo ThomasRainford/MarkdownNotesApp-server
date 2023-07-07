@@ -384,6 +384,37 @@ export class UserResolver {
     return allFollowers;
   }
 
+  @Query(() => [Collection])
+  @UseMiddleware(isAuth)
+  async userVotes(
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<Promise<Collection | null>[] | null> {
+    const userRepo = em.getRepository(User);
+    const collectionRepo = em.getRepository(Collection);
+
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await userRepo.findOne({ id: userId.toString() });
+
+    if (!user) {
+      return null;
+    }
+
+    const upvoted = user.upvoted;
+    const collections = upvoted.map(async (upvote: string) => {
+      const collection = await collectionRepo.findOne({ id: upvote }, [
+        "owner",
+        "lists",
+      ]);
+      return collection;
+    });
+
+    return collections;
+  }
+
   @Query(() => [Collection], { nullable: true })
   @UseMiddleware(isAuth)
   async publicNotes(
