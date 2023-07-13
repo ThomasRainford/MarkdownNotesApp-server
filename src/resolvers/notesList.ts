@@ -331,6 +331,8 @@ export class NotesListResolver {
       }
     });
 
+    note.updatedAt = new Date();
+
     await em.persistAndFlush(notesList);
 
     return { note };
