@@ -48,6 +48,7 @@ query userCollections($id: String!) {
   userCollections(id: $id) {
       id
       title
+      visibility
       owner {
           id
           username
