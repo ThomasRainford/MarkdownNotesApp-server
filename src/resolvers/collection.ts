@@ -120,7 +120,6 @@ export class CollectionResolver {
     const repo = em.getRepository(Collection);
 
     const collections = await repo.find({ owner: id }, ["owner", "lists"]);
-
     if (!collections) {
       return null;
     }
@@ -215,8 +214,8 @@ export class CollectionResolver {
     // Otherwise add vote.
     if (me?.upvoted.includes(id)) {
       collection.upvotes--;
-      me.upvoted = me.upvoted.filter((id) => {
-        return id !== id;
+      me.upvoted = me.upvoted.filter((uv) => {
+        return uv !== id;
       });
     } else {
       collection.upvotes++;
