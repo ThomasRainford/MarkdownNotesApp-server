@@ -214,16 +214,30 @@ export class UserResolver {
           },
         ],
       };
-    } else {
-      if (username) {
-        user.username = username;
-      }
-      if (password) {
-        user.password = await argon2.hash(password);
-      }
-
-      em.persistAndFlush(user);
     }
+
+    const users = await repo.findAll();
+    const usernameExists =
+      users.find((user) => user.username === username) !== undefined;
+    if (usernameExists) {
+      return {
+        errors: [
+          {
+            field: "username",
+            message: `A user with the username "${username}" already exists.`,
+          },
+        ],
+      };
+    }
+
+    if (username) {
+      user.username = username;
+    }
+    if (password) {
+      user.password = await argon2.hash(password);
+    }
+
+    em.persistAndFlush(user);
 
     return {
       user,
