@@ -5,7 +5,9 @@ import { Note } from "../../resolvers/object-types/Note";
 import { Collection } from "../../entities/Collection";
 import { User } from "../../entities/User";
 
-export const seed = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
+export const seed = async (
+  em: EntityManager<IDatabaseDriver<Connection>>
+): Promise<void> => {
   const users = await createUsers(em);
 
   await createCollections(em, users);

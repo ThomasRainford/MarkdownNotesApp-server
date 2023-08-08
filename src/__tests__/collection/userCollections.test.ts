@@ -5,6 +5,7 @@ import mikroOrmConfig from "../utils/mikro-orm.config";
 import { seed } from "../utils/seeder";
 import { dropDb, gqlReq } from "../utils/utils";
 import { userCollectionsQuery } from "./utils";
+import { Collection } from "../../entities/Collection";
 
 let application: Application;
 let em: EntityManager<IDatabaseDriver<Connection>>;
@@ -28,7 +29,7 @@ describe("UsesrCollections Query", () => {
       application.expressServer.close();
       await application.orm.close();
       await application.apolloServer.stop();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log(error);
     }
   });
@@ -51,12 +52,14 @@ describe("UsesrCollections Query", () => {
       userId: user?._id,
     });
 
-    console.log(JSON.stringify(result));
-
-    const userCollections = result?.data?.userCollections;
+    const userCollections = result?.data?.userCollections as Collection[];
+    let publicCollectionsCount = 0;
+    userCollections.forEach((uc) => {
+      if (uc.visibility === "public") publicCollectionsCount++;
+    });
     expect(userCollections).not.toBeNull();
     expect(userCollections).toBeInstanceOf(Array);
-    expect(userCollections).toHaveLength(3);
+    expect(userCollections).toHaveLength(publicCollectionsCount);
     expect(userCollections[0].owner.id).toBe(targetUser?.id);
   });
 });

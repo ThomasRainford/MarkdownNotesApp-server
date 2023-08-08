@@ -14,6 +14,7 @@ import { validateVisibility } from "../utils/validateVisibility";
 import { validateCollectionTitle } from "../utils/validateTitle";
 import { isAuth } from "../middleware/isAuth";
 import { CollectionUpdateInput } from "./input-types/CollectionUpdateInput";
+import { ObjectId } from "@mikro-orm/mongodb";
 
 @Resolver(Collection)
 export class CollectionResolver {
@@ -114,17 +115,23 @@ export class CollectionResolver {
   @UseMiddleware(isAuth)
   async userCollections(
     @Arg("id") id: string,
-    @Ctx() { em }: OrmContext
+    @Ctx() { em, req }: OrmContext
   ): Promise<Collection[] | null> {
     const repo = em.getRepository(Collection);
 
-    const collections = repo.find({ owner: id }, ["owner", "lists"]);
-
+    const collections = await repo.find({ owner: id }, ["owner", "lists"]);
     if (!collections) {
       return null;
     }
 
-    return collections;
+    let userCollections = collections;
+    if (!req.session.userId?.equals(new ObjectId(id))) {
+      userCollections = userCollections.filter(
+        (collection) => collection.visibility === "public"
+      );
+    }
+
+    return userCollections;
   }
 
   @Mutation(() => CollectionResponse)
@@ -207,8 +214,8 @@ export class CollectionResolver {
     // Otherwise add vote.
     if (me?.upvoted.includes(id)) {
       collection.upvotes--;
-      me.upvoted = me.upvoted.filter((id) => {
-        return id !== id;
+      me.upvoted = me.upvoted.filter((uv) => {
+        return uv !== id;
       });
     } else {
       collection.upvotes++;

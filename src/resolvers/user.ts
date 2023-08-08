@@ -19,6 +19,8 @@ import { UserRegisterInput } from "./input-types/UserRegisterInput";
 import { ActivityFeedResponse } from "./object-types/ActivityFeedResponse";
 import { CollectionResponse } from "./object-types/CollectionResponse";
 import { UserResponse } from "./object-types/UserResponse";
+import { NotesList } from "../entities/NotesList";
+import { Note } from "./object-types/Note";
 
 @Resolver(User)
 export class UserResolver {
@@ -212,16 +214,30 @@ export class UserResolver {
           },
         ],
       };
-    } else {
-      if (username) {
-        user.username = username;
-      }
-      if (password) {
-        user.password = await argon2.hash(password);
-      }
-
-      em.persistAndFlush(user);
     }
+
+    const users = await repo.findAll();
+    const usernameExists =
+      users.find((user) => user.username === username) !== undefined;
+    if (usernameExists) {
+      return {
+        errors: [
+          {
+            field: "username",
+            message: `A user with the username "${username}" already exists.`,
+          },
+        ],
+      };
+    }
+
+    if (username) {
+      user.username = username;
+    }
+    if (password) {
+      user.password = await argon2.hash(password);
+    }
+
+    em.persistAndFlush(user);
 
     return {
       user,
@@ -233,7 +249,7 @@ export class UserResolver {
   async follow(
     @Arg("targetUserId") targetUserId: string,
     @Ctx() { em, req }: OrmContext
-  ): Promise<boolean> {
+  ): Promise<boolean | null> {
     const repo = em.getRepository(User);
 
     if (!req.session.userId) {
@@ -241,6 +257,11 @@ export class UserResolver {
     }
 
     const meId = req.session["userId"].toString();
+
+    // Don't follow self.
+    if (meId === targetUserId) {
+      return null;
+    }
 
     const me = await repo.findOne({ id: meId });
     const targetUser = await repo.findOne({ id: targetUserId });
@@ -321,6 +342,93 @@ export class UserResolver {
     return allFollowers;
   }
 
+  @Query(() => [User])
+  @UseMiddleware(isAuth)
+  async userFollowing(
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<Promise<User | null>[] | null> {
+    const repo = em.getRepository(User);
+
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await repo.findOne({ id: userId.toString() });
+
+    if (!user) {
+      return null;
+    }
+
+    const following = user.following;
+
+    const allFollowing = following.map(async (userId) => {
+      const user = await repo.findOne({ id: userId });
+      return user;
+    });
+
+    return allFollowing;
+  }
+
+  @Query(() => [User])
+  @UseMiddleware(isAuth)
+  async userFollowers(
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<Promise<User | null>[] | null> {
+    const repo = em.getRepository(User);
+
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await repo.findOne({ id: userId.toString() });
+
+    if (!user) {
+      return null;
+    }
+
+    const followers = user.followers;
+
+    const allFollowers = followers.map(async (userId) => {
+      const user = await repo.findOne({ id: userId });
+      return user;
+    });
+
+    return allFollowers;
+  }
+
+  @Query(() => [Collection])
+  @UseMiddleware(isAuth)
+  async userVotes(
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<Promise<Collection | null>[] | null> {
+    const userRepo = em.getRepository(User);
+    const collectionRepo = em.getRepository(Collection);
+
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await userRepo.findOne({ id: userId.toString() });
+
+    if (!user) {
+      return null;
+    }
+
+    const upvoted = user.upvoted;
+    const collections = upvoted.map(async (upvote: string) => {
+      const collection = await collectionRepo.findOne({ id: upvote }, [
+        "owner",
+        "lists",
+      ]);
+      return collection;
+    });
+
+    return collections;
+  }
+
   @Query(() => [Collection], { nullable: true })
   @UseMiddleware(isAuth)
   async publicNotes(
@@ -366,7 +474,7 @@ export class UserResolver {
 
     const publicCollections = await collectionsRepo.find(
       { owner: targetUserId },
-      { filters: ["visibility"] }
+      { filters: ["visibility"], populate: ["lists"] }
     );
 
     if (publicCollections.length === 0) {
@@ -382,7 +490,6 @@ export class UserResolver {
     const collectionToAdd = publicCollections.find(
       (collection) => collection.id === collectionId
     );
-
     if (!collectionToAdd) {
       return {
         error: {
@@ -406,10 +513,22 @@ export class UserResolver {
       };
     }
 
-    const { title, visibility } = collectionToAdd;
+    const { title, visibility, lists, upvotes } = collectionToAdd;
     const collection = new Collection({ title, visibility });
 
     collection.owner = me;
+    // Create copies of the collectionToAdd lists and notes.
+    collection.lists.removeAll();
+    const newLists = lists.toArray().map((list) => {
+      const notes = list.notes.map((note: Note) => {
+        return new Note({ title: note.title, body: note.body });
+      });
+      return new NotesList({ title: list.title, notes });
+    });
+    newLists.forEach((list) => {
+      collection.lists.add(list);
+    });
+    collection.upvotes = upvotes;
     me.collections.add(collection);
     await em.populate(collection, ["owner", "lists"]);
 

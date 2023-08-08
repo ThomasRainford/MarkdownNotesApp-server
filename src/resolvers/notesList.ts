@@ -18,9 +18,10 @@ import { ListLocationInput } from "./input-types/ListLocationInput";
 import { NoteLocationInput } from "./input-types/NoteLocationInput";
 import { NoteUpdateInput } from "./input-types/NoteUpdateInput";
 import { NotesListUpdateInput } from "./input-types/NotesListUpdateInput";
+import { ObjectId } from "@mikro-orm/mongodb";
 import {
-  validateNotesListTitle,
   validateNoteTitle,
+  validateNotesListTitle,
 } from "../utils/validateTitle";
 
 @Resolver(NotesList)
@@ -166,6 +167,36 @@ export class NotesListResolver {
     );
 
     if (!collection) {
+      return null;
+    }
+
+    const notesLists = collection?.lists.getItems();
+
+    return notesLists;
+  }
+
+  @Query(() => [NotesList], { nullable: true })
+  @UseMiddleware(isAuth)
+  async userNotesLists(
+    @Arg("collectionId") collectionId: string,
+    @Arg("userId") userId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<NotesList[] | null> {
+    const collectionRepo = em.getRepository(Collection);
+
+    const collection = await collectionRepo.findOne(
+      { id: collectionId, owner: userId },
+      ["owner", "lists"]
+    );
+
+    if (!collection) {
+      return null;
+    }
+
+    if (
+      !req.session.userId?.equals(new ObjectId(userId)) &&
+      collection.visibility !== "public"
+    ) {
       return null;
     }
 
@@ -330,6 +361,8 @@ export class NotesListResolver {
         }
       }
     });
+
+    note.updatedAt = new Date();
 
     await em.persistAndFlush(notesList);
 

@@ -29,7 +29,7 @@ describe("Vote Mutation", () => {
       application.expressServer.close();
       await application.orm.close();
       await application.apolloServer.stop();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log(error);
     }
   });
