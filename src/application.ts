@@ -18,7 +18,7 @@ import MongoDBStore from "connect-mongodb-session";
 import { CollectionResolver } from "./resolvers/collection";
 import { NotesListResolver } from "./resolvers/notesList";
 import cors from "cors";
-import { Server } from "http";
+import http, { Server } from "http";
 const MongoStore = MongoDBStore(session);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("development");
@@ -52,7 +52,6 @@ export default class Application {
         credentials: true,
       })
     );
-
     this.host.use(
       session({
         name: COOKIE_NAME,
@@ -73,12 +72,22 @@ export default class Application {
         resave: false,
       })
     );
+    const httpServer = http.createServer(this.host);
 
     this.apolloServer = new ApolloServer({
       schema: await buildSchema({
         resolvers: [UserResolver, CollectionResolver, NotesListResolver],
         validate: false,
       }),
+      subscriptions: {
+        path: "/subscriptions",
+        onConnect: () => {
+          console.log("Client connected for subscriptions");
+        },
+        onDisconnect: () => {
+          console.log("Client disconnected from subscriptions");
+        },
+      },
       context: ({ req, res }: never): OrmContext => ({
         em: this.orm.em,
         req,
@@ -90,14 +99,15 @@ export default class Application {
       app: this.host,
       cors: false,
     });
+    this.apolloServer.installSubscriptionHandlers(httpServer);
 
     const port = process.env.PORT || 3000;
-    console.log(process.env.NODE_ENV);
-    console.log(process.env.MONGO_HOST);
-    this.expressServer = this.host.listen(port, () => {
+    console.log("environment:", process.env.NODE_ENV);
+    console.log("db host:    ", process.env.MONGO_HOST);
+    this.expressServer = httpServer.listen(port, () => {
       console.log(`Server started on port ${port}.`);
       console.log(
-        `Visit 'http://localhost:${port}/graphql' to access GraphQL Playgorund.`
+        `Subscriptions ready at ws://localhost:${port}${this.apolloServer.subscriptionsPath}`
       );
     });
   };
@@ -151,7 +161,7 @@ export default class Application {
     });
 
     const port = process.env.PORT || 3001;
-    console.log(process.env.NODE_ENV);
+    console.log("environment:", process.env.NODE_ENV);
     this.expressServer = this.host.listen(port);
   };
 }
