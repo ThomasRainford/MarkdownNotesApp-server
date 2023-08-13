@@ -4,6 +4,7 @@ import { NotesList } from "../../entities/NotesList";
 import { Note } from "../../resolvers/object-types/Note";
 import { Collection } from "../../entities/Collection";
 import { User } from "../../entities/User";
+import { Message } from "../../entities/Message";
 
 export const seed = async (
   em: EntityManager<IDatabaseDriver<Connection>>
@@ -12,6 +13,7 @@ export const seed = async (
 
   await createCollections(em, users);
   await createNotesLists(em, users);
+  await createMessages(em, users);
 };
 
 const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
@@ -48,6 +50,32 @@ const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
   await em.persistAndFlush([user1, user2, user3, user4]);
   users.push(user1, user2, user3, user4);
   return users;
+};
+
+const createMessages = async (
+  em: EntityManager<IDatabaseDriver<Connection>>,
+  users: User[]
+) => {
+  for (const user of users) {
+    const message1 = new Message({
+      content: "message1",
+    });
+    const message2 = new Message({
+      content: "message2",
+    });
+    const message3 = new Message({
+      content: "message3",
+    });
+    message1.sender = user;
+    message2.sender = user;
+    message3.sender = user;
+    user.messages.add(message1, message2, message3);
+    await em.populate(message1, ["sender"]);
+    await em.populate(message2, ["sender"]);
+    await em.populate(message3, ["sender"]);
+
+    await em.persistAndFlush([message1, message2, message3]);
+  }
 };
 
 const createCollections = async (

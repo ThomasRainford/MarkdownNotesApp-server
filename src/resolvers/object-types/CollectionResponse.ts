@@ -4,11 +4,9 @@ import { Error } from "./Error";
 
 @ObjectType()
 export class CollectionResponse {
+  @Field(() => Collection, { nullable: true })
+  collection?: Collection;
 
-   @Field(() => Collection, { nullable: true })
-   collection?: Collection
-
-   @Field(() => Error, { nullable: true })
-   error?: Error
-
+  @Field(() => Error, { nullable: true })
+  error?: Error;
 }

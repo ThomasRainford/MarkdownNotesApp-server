@@ -19,6 +19,7 @@ import { CollectionResolver } from "./resolvers/collection";
 import { NotesListResolver } from "./resolvers/notesList";
 import cors from "cors";
 import http, { Server } from "http";
+import { MessageResolver } from "./resolvers/message";
 const MongoStore = MongoDBStore(session);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("development");
@@ -76,7 +77,12 @@ export default class Application {
 
     this.apolloServer = new ApolloServer({
       schema: await buildSchema({
-        resolvers: [UserResolver, CollectionResolver, NotesListResolver],
+        resolvers: [
+          UserResolver,
+          CollectionResolver,
+          NotesListResolver,
+          MessageResolver,
+        ],
         validate: false,
       }),
       subscriptions: {
