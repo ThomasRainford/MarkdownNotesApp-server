@@ -1,3 +1,4 @@
+import { Chat } from "../../entities/Chat";
 import { User } from "../../entities/User";
 import { Field, InputType } from "type-graphql";
 
@@ -8,4 +9,7 @@ export class MessageInput {
 
   @Field(() => User)
   sender: User;
+
+  @Field(() => Chat)
+  chat: Chat;
 }

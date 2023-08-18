@@ -44,7 +44,11 @@ export class UserResolver {
   ): Promise<User | null> {
     const repo = em.getRepository(User);
 
-    const user = await repo.findOne({ username }, ["collections", "messages"]);
+    const user = await repo.findOne({ username }, [
+      "collections",
+      "messages",
+      "chats",
+    ]);
 
     return user;
   }

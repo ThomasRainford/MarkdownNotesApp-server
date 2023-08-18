@@ -1,6 +1,7 @@
 import {
   Collection,
   Entity,
+  ManyToMany,
   OneToMany,
   PrimaryKey,
   Property,
@@ -10,7 +11,7 @@ import { ObjectId } from "@mikro-orm/mongodb";
 import { Field, ID, ObjectType } from "type-graphql";
 import { UserRegisterInput } from "../resolvers/input-types/UserRegisterInput";
 import { Collection as EntityCollection } from "./Collection";
-import { Message } from "./Message";
+import { ChatPrivate } from "./ChatPrivate";
 
 @ObjectType() // type-graphql
 @Entity() // orm
@@ -50,9 +51,9 @@ export class User {
   @Property()
   upvoted = new Array<string>();
 
-  @Field(() => [Message])
-  @OneToMany(() => Message, (message) => message.sender)
-  messages = new Collection<Message>(this);
+  @Field(() => [ChatPrivate])
+  @ManyToMany()
+  chatPrivates = new Collection<ChatPrivate>(this);
 
   @Field(() => Date)
   @Property()

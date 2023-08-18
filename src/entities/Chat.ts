@@ -20,5 +20,5 @@ export class Chat {
 
   @Field(() => [Message])
   @OneToMany(() => Message, (message) => message.chat)
-  message = new Collection<Message>(this);
+  messages = new Collection<Message>(this);
 }

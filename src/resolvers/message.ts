@@ -16,6 +16,9 @@ import { isAuth } from "../middleware/isAuth";
 import { User } from "../entities/User";
 import { CreateMessageResponse } from "./object-types/CreateMessageResponse";
 import { MessagePayload } from "./object-types/MessagePayload";
+import { CreateMessageInput } from "./input-types/CreateMessageInput";
+import { Chat } from "../entities/Chat";
+import { ChatPrivate } from "src/entities/ChatPrivate";
 
 const channel = "CHAT_CHANNEL";
 
@@ -30,11 +33,12 @@ export class MessageResolver {
 
   @Mutation(() => CreateMessageResponse)
   @UseMiddleware(isAuth)
-  async createMessage(
+  async createPrivateMessage(
     @PubSub() pubSub: PubSubEngine,
-    @Arg("content") content: string,
+    @Arg("createMessageInput") createMessageInput: CreateMessageInput,
     @Ctx() { em, req }: OrmContext
   ): Promise<CreateMessageResponse> {
+    const { content, chatId } = createMessageInput;
     const userRepo = em.getRepository(User);
     // Find user.
     const user = await userRepo.findOne({ _id: req.session.userId }, [
@@ -46,14 +50,43 @@ export class MessageResolver {
       return {
         error: {
           property: "req.session.userId",
-          message: "Please login",
+          message: "Please login.",
+        },
+      };
+    }
+    // Find chat.
+    const chatRepository = em.getRepository(Chat);
+    const chat = chatRepository.findOne({ id: chatId }, ["messages"]);
+    if (!chat) {
+      return {
+        error: {
+          property: "chatId",
+          message: "A chat with the given ID was not found.",
+        },
+      };
+    }
+    if (!(chat instanceof ChatPrivate)) {
+      return {
+        error: {
+          property: "chatId",
+          message: "An ID for a chat room was given.",
+        },
+      };
+    }
+    // Check user has a ChatPrivate with the given id.
+    const hasChatPrivate = user.chatPrivates.contains(chat);
+    if (!hasChatPrivate) {
+      return {
+        error: {
+          property: "chatId",
+          message: "You do not have access to this private chat.",
         },
       };
     }
     // Create and persist new message.
-    const message = new Message({ content, sender: user });
-    user.messages.add(message);
-    await em.persistAndFlush([message, user]);
+    const message = new Message({ content, sender: user, chat });
+    chat.messages.add(message);
+    await em.persistAndFlush([message, chat]);
     // Publish new message to channel.
     await pubSub.publish(channel, message);
     // Return new message.

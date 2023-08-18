@@ -42,8 +42,9 @@ export class Message {
   @Property({ onUpdate: () => new Date() })
   updatedAt = new Date();
 
-  constructor({ content, sender }: MessageInput) {
+  constructor({ content, sender, chat }: MessageInput) {
     this.content = content;
     this.sender = sender;
+    this.chat = chat;
   }
 }
