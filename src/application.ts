@@ -16,7 +16,7 @@ import { UserResolver } from "./resolvers/user";
 import { OrmContext } from "./types/types";
 import MongoDBStore from "connect-mongodb-session";
 import { CollectionResolver } from "./resolvers/collection";
-import { NotesListResolver } from "./resolvers/notesList";
+import { NotesListResolver } from "./resolvers/notes-list";
 import cors from "cors";
 import http, { Server } from "http";
 import { MessageResolver } from "./resolvers/message";

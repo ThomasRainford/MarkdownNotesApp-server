@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 import { graphql, GraphQLSchema } from "graphql";
 import { CollectionResolver } from "../../resolvers/collection";
-import { NotesListResolver } from "../../resolvers/notesList";
+import { NotesListResolver } from "../../resolvers/notes-list";
 import { UserResolver } from "../../resolvers/user";
 import { Maybe } from "graphql/jsutils/Maybe";
 import { buildSchema } from "type-graphql";

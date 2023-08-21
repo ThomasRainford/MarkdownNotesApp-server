@@ -19,6 +19,7 @@ import { MessagePayload } from "./object-types/MessagePayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
 import { Chat } from "../entities/Chat";
 import { ChatPrivate } from "src/entities/ChatPrivate";
+import { NewMessageArgs } from "./input-types/NewMessageArgs";
 
 const channel = "CHAT_CHANNEL";
 
@@ -57,6 +58,7 @@ export class MessageResolver {
     // Find chat.
     const chatRepository = em.getRepository(Chat);
     const chat = chatRepository.findOne({ id: chatId }, ["messages"]);
+    // Chat does not exist.
     if (!chat) {
       return {
         error: {
@@ -65,6 +67,7 @@ export class MessageResolver {
         },
       };
     }
+    // Chat is not a private chat.
     if (!(chat instanceof ChatPrivate)) {
       return {
         error: {
@@ -95,8 +98,15 @@ export class MessageResolver {
 
   @Subscription({
     topics: channel,
+    filter: ({
+      payload,
+      args,
+    }: {
+      payload: MessagePayload;
+      args: NewMessageArgs;
+    }) => payload.message?.chat.id === args.chatId,
   })
-  messageSent(@Root() message: Message): MessagePayload {
-    return { message };
+  messageSent(@Root() payload: MessagePayload): MessagePayload {
+    return { message: payload.message };
   }
 }
