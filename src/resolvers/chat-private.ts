@@ -19,15 +19,14 @@ export class ChatPrivateResolver {
   @UseMiddleware(isAuth)
   async chatPrivate(
     @Arg("chatPrivateId") chatPrivateId: string,
-    @Ctx() { em, req }: OrmContext
+    @Ctx() { em }: OrmContext
   ): Promise<ChatPrivateResponse> {
     const chatPrivateRepo = em.getRepository(ChatPrivate);
     const chatPrivate = await chatPrivateRepo.findOne(
       {
         id: chatPrivateId,
-        $and: [{ owner: req.session.userId }],
       },
-      ["participants"]
+      ["participants", "messages"]
     );
     // Check if ChatPrivate exists.
     if (!chatPrivate) {

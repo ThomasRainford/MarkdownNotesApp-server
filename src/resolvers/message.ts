@@ -17,7 +17,6 @@ import { User } from "../entities/User";
 import { CreateMessageResponse } from "./object-types/CreateMessageResponse";
 import { MessagePayload } from "./object-types/MessagePayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
-import { Chat } from "../entities/Chat";
 import { ChatPrivate } from "../entities/ChatPrivate";
 import { NewMessageArgs } from "./input-types/NewMessageArgs";
 
@@ -43,7 +42,7 @@ export class MessageResolver {
     const userRepo = em.getRepository(User);
     // Find user.
     const user = await userRepo.findOne({ _id: req.session.userId }, [
-      "messages",
+      "chatPrivates",
     ]);
     // If the user is not logged in then send error.
     // Otherwise create new message.
@@ -56,10 +55,13 @@ export class MessageResolver {
       };
     }
     // Find chat.
-    const chatRepository = em.getRepository(Chat);
-    const chat = chatRepository.findOne({ id: chatId }, ["messages"]);
-    // Chat does not exist.
-    if (!chat) {
+    const chatPrivateRepo = em.getRepository(ChatPrivate);
+    const chatPrivate = await chatPrivateRepo.findOne({ id: chatId }, [
+      "participants",
+      "messages",
+    ]);
+    // Check if ChatPrivate exists.
+    if (!chatPrivate) {
       return {
         error: {
           property: "chatId",
@@ -68,7 +70,7 @@ export class MessageResolver {
       };
     }
     // Chat is not a private chat.
-    if (!(chat instanceof ChatPrivate)) {
+    if (!(chatPrivate instanceof ChatPrivate)) {
       return {
         error: {
           property: "chatId",
@@ -77,7 +79,7 @@ export class MessageResolver {
       };
     }
     // Check user has a ChatPrivate with the given id.
-    const hasChatPrivate = user.chatPrivates.contains(chat);
+    const hasChatPrivate = user.chatPrivates.contains(chatPrivate);
     if (!hasChatPrivate) {
       return {
         error: {
@@ -87,11 +89,11 @@ export class MessageResolver {
       };
     }
     // Create and persist new message.
-    const message = new Message({ content, sender: user, chat });
-    chat.messages.add(message);
-    await em.persistAndFlush([message, chat]);
+    const message = new Message({ content, sender: user, chat: chatPrivate });
+    chatPrivate.messages.add(message);
+    await em.persistAndFlush([message, chatPrivate]);
     // Publish new message to channel.
-    await pubSub.publish(channel, message);
+    await pubSub.publish(channel, { message });
     // Return new message.
     return { message };
   }
@@ -106,7 +108,11 @@ export class MessageResolver {
       args: NewMessageArgs;
     }) => payload.message?.chat.id === args.chatId,
   })
-  messageSent(@Root() payload: MessagePayload): MessagePayload {
+  messageSent(
+    @Root() payload: MessagePayload,
+    @Arg("chatId") chatId: string
+  ): MessagePayload {
+    chatId;
     return { message: payload.message };
   }
 }
