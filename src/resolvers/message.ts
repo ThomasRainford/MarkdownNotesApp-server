@@ -18,7 +18,7 @@ import { CreateMessageResponse } from "./object-types/CreateMessageResponse";
 import { MessagePayload } from "./object-types/MessagePayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
 import { Chat } from "../entities/Chat";
-import { ChatPrivate } from "src/entities/ChatPrivate";
+import { ChatPrivate } from "../entities/ChatPrivate";
 import { NewMessageArgs } from "./input-types/NewMessageArgs";
 
 const channel = "CHAT_CHANNEL";

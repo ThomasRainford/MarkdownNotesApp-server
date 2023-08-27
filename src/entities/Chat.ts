@@ -2,6 +2,7 @@ import { Field, ID, ObjectType } from "type-graphql";
 import { Message } from "./Message";
 import {
   Collection,
+  Entity,
   OneToMany,
   PrimaryKey,
   SerializedPrimaryKey,
@@ -9,6 +10,7 @@ import {
 import { ObjectId } from "@mikro-orm/mongodb";
 
 @ObjectType()
+@Entity({ abstract: true, discriminatorColumn: "discr" })
 export class Chat {
   @Field(() => ID)
   @PrimaryKey()

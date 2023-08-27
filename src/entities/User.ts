@@ -52,7 +52,7 @@ export class User {
   upvoted = new Array<string>();
 
   @Field(() => [ChatPrivate])
-  @ManyToMany()
+  @ManyToMany(() => ChatPrivate, "participants", { owner: true })
   chatPrivates = new Collection<ChatPrivate>(this);
 
   @Field(() => Date)
