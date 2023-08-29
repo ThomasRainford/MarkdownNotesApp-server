@@ -30,9 +30,9 @@ export class UserResolver {
     const repo = em.getRepository(User);
 
     const user = await repo.findOne({ _id: req.session.userId }, [
-      "collections",
+      "collections.lists",
+      "chatPrivates.participants",
     ]);
-
     return user;
   }
 
@@ -45,9 +45,8 @@ export class UserResolver {
     const repo = em.getRepository(User);
 
     const user = await repo.findOne({ username }, [
-      "collections",
-      "messages",
-      "chats",
+      "collections.lists",
+      "chatPrivates.participants",
     ]);
 
     return user;
