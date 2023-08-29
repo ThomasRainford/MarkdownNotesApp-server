@@ -21,6 +21,7 @@ import cors from "cors";
 import http, { Server } from "http";
 import { MessageResolver } from "./resolvers/message";
 import { ChatPrivateResolver } from "./resolvers/chat-private";
+import { User } from "./entities/User";
 const MongoStore = MongoDBStore(session);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("development");
@@ -89,8 +90,15 @@ export default class Application {
       }),
       subscriptions: {
         path: "/subscriptions",
-        onConnect: () => {
+        onConnect: async (connectionParams) => {
           console.log("Client connected for subscriptions");
+          // Authenticate user.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const userId = (connectionParams as any).userId;
+          const user = await this.orm.em
+            .getRepository(User)
+            .findOne({ id: userId });
+          if (!user) throw new Error("Not authenticated");
         },
         onDisconnect: () => {
           console.log("Client disconnected from subscriptions");

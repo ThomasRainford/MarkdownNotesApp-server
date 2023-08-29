@@ -15,12 +15,14 @@ import { OrmContext } from "../types/types";
 import { isAuth } from "../middleware/isAuth";
 import { User } from "../entities/User";
 import { CreateMessageResponse } from "./object-types/CreateMessageResponse";
-import { MessagePayload } from "./object-types/MessagePayload";
+import { MessageSentPayload } from "./object-types/MessagePayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
 import { ChatPrivate } from "../entities/ChatPrivate";
 import { NewMessageArgs } from "./input-types/NewMessageArgs";
 
-const channel = "CHAT_CHANNEL";
+const channels = {
+  NEW_MESSAGE: "NEW_MESSAGE",
+};
 
 @Resolver(Message)
 export class MessageResolver {
@@ -93,26 +95,38 @@ export class MessageResolver {
     chatPrivate.messages.add(message);
     await em.persistAndFlush([message, chatPrivate]);
     // Publish new message to channel.
-    await pubSub.publish(channel, { message });
+    await pubSub.publish(channels.NEW_MESSAGE, { message });
     // Return new message.
     return { message };
   }
 
   @Subscription({
-    topics: channel,
+    topics: channels.NEW_MESSAGE,
     filter: ({
       payload,
       args,
     }: {
-      payload: MessagePayload;
-      args: NewMessageArgs;
-    }) => payload.message?.chat.id === args.chatId,
+      payload: MessageSentPayload;
+      args: { messageSentInput: NewMessageArgs };
+    }) => {
+      const chat = payload.message?.chat;
+      if (chat instanceof ChatPrivate) {
+        return (
+          chat.participants
+            .toArray()
+            .find((user) => user.id === args.messageSentInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageSentInput.chatId
+        );
+      }
+      return false;
+    },
   })
   messageSent(
-    @Root() payload: MessagePayload,
-    @Arg("chatId") chatId: string
-  ): MessagePayload {
-    chatId;
+    @Root() payload: MessageSentPayload,
+    @Arg("messageSentInput") messageSentInput: NewMessageArgs
+  ): MessageSentPayload {
+    messageSentInput;
     return { message: payload.message };
   }
 }

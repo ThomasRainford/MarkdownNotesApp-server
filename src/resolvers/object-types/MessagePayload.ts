@@ -2,7 +2,7 @@ import { Message } from "../../entities/Message";
 import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
-export class MessagePayload {
+export class MessageSentPayload {
   @Field({ nullable: true })
   message?: Message;
 
