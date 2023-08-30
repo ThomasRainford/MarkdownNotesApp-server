@@ -1,0 +1,49 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    env:
+      MONGO_USERNAME: ${{secrets.MONGO_USERNAME}}
+      MONGO_PASSWORD: ${{secrets.MONGO_PASSWORD}}
+      MONGO_HOST: ${{secrets.MONGO_HOST}}
+      CORS_ORIGIN: ${{secrets.CORS_ORIGIN}}
+      SESSION_SECRET: ${{secrets.SESSION_SECRET}}
+      JWT_SECRET: ${{secrets.JWT_SECRET}}
+      CLIENT_DOMAIN: ${{secrets.CLIENT_DOMAIN}}
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Test secrets
+        run: echo "Mongo username is:${{secrets.MONGO_USERNAME}}"
+      - name: create env file
+        run: |
+          touch .env
+          echo MONGO_USERNAME=${{secrets.MONGO_USERNAME}} >> .env
+          echo MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} >> .env
+          echo MONGO_HOST=${{secrets.MONGO_HOST}} >> .env
+          echo CORS_ORIGIN=${{secrets.CORS_ORIGIN}} >> .env
+          echo SESSION_SECRET=${{secrets.SESSION_SECRET}} >> .env
+          echo JWT_SECRET=${{secrets.JWT_SECRET}} >> .env
+          echo CLIENT_DOMAIN=${{secrets.CLIENT_DOMAIN}} >> .env
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - run: yarn
+      - run: yarn test
