@@ -5,7 +5,7 @@ import { Note } from "../../resolvers/object-types/Note";
 import { Collection } from "../../entities/Collection";
 import { User } from "../../entities/User";
 import { Message } from "../../entities/Message";
-import { ChatPrivate } from "src/entities/ChatPrivate";
+import { ChatPrivate } from "../../entities/ChatPrivate";
 
 export const seed = async (
   em: EntityManager<IDatabaseDriver<Connection>>
