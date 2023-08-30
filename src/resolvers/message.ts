@@ -19,9 +19,14 @@ import { MessageSentPayload } from "./object-types/MessagePayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
 import { ChatPrivate } from "../entities/ChatPrivate";
 import { NewMessageArgs } from "./input-types/NewMessageArgs";
+import { MessageDeletedPayload } from "./object-types/MessageDeletedPayload";
+import { DeleteMessageArgs } from "./input-types/DeleteMessageArgs";
+import { MessageDeleteResponse } from "./object-types/MessageDeleteResponse";
+import { MessageSentResponse } from "./object-types/MessageSentResponse";
 
 const channels = {
   NEW_MESSAGE: "NEW_MESSAGE",
+  DELETE_MESSAGE: "DELETE_MESSAGE",
 };
 
 @Resolver(Message)
@@ -100,6 +105,68 @@ export class MessageResolver {
     return { message };
   }
 
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteMessage(
+    @PubSub() pubSub: PubSubEngine,
+    @Arg("messageId") messageId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<boolean> {
+    const messageRepo = em.getRepository(Message);
+    const messageToDelete = await messageRepo.findOne(
+      {
+        id: messageId,
+        sender: req.session.userId,
+      },
+      ["sender", "chat.messages", "chat.participants"]
+    );
+    await pubSub.publish(channels.DELETE_MESSAGE, { message: messageToDelete });
+    // No message so return false.
+    if (!messageToDelete) {
+      return false;
+    }
+    // Get the delete result.
+    const hasDeleted = await messageRepo.nativeDelete({
+      id: messageToDelete.id,
+    });
+    if (hasDeleted === 0) {
+      return false;
+    }
+    await em.persistAndFlush(messageToDelete);
+    // Publish deleted message ID to channel.
+    return true;
+  }
+
+  @Subscription({
+    topics: channels.DELETE_MESSAGE,
+    filter: ({
+      payload,
+      args,
+    }: {
+      payload: MessageDeletedPayload;
+      args: { messageDeletedInput: DeleteMessageArgs };
+    }) => {
+      const chat = payload.message?.chat;
+      if (chat instanceof ChatPrivate) {
+        return (
+          chat.participants
+            .toArray()
+            .find((user) => user.id === args.messageDeletedInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageDeletedInput.chatId
+        );
+      }
+      return false;
+    },
+  })
+  messageDeleted(
+    @Root() payload: MessageDeletedPayload,
+    @Arg("messageDeletedInput") messageDeletedInput: DeleteMessageArgs
+  ): MessageDeleteResponse {
+    messageDeletedInput;
+    return { messageId: payload.message.id };
+  }
+
   @Subscription({
     topics: channels.NEW_MESSAGE,
     filter: ({
@@ -125,7 +192,7 @@ export class MessageResolver {
   messageSent(
     @Root() payload: MessageSentPayload,
     @Arg("messageSentInput") messageSentInput: NewMessageArgs
-  ): MessageSentPayload {
+  ): MessageSentResponse {
     messageSentInput;
     return { message: payload.message };
   }
