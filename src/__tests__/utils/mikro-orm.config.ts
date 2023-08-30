@@ -4,10 +4,13 @@ import { Collection } from "../../entities/Collection";
 import { NotesList } from "../../entities/NotesList";
 import { User } from "../../entities/User";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
+import { Message } from "../../entities/Message";
+import { Chat } from "../../entities/Chat";
+import { ChatPrivate } from "../../entities/ChatPrivate";
 
 export default {
   metadataProvider: TsMorphMetadataProvider,
-  entities: [User, Collection, NotesList],
+  entities: [User, Collection, NotesList, Message, Chat, ChatPrivate],
   dbName: "testing-db",
   type: "mongo",
   clientUrl: `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}`,

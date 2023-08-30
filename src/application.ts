@@ -158,6 +158,7 @@ export default class Application {
         resave: false,
       })
     );
+    const httpServer = http.createServer(this.host);
 
     this.apolloServer = new ApolloServer({
       schema: await buildSchema({
@@ -170,6 +171,22 @@ export default class Application {
         ],
         validate: false,
       }),
+      subscriptions: {
+        path: "/subscriptions",
+        onConnect: async (connectionParams) => {
+          console.log("Client connected for subscriptions");
+          // Authenticate user.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const userId = (connectionParams as any).userId;
+          const user = await this.orm.em
+            .getRepository(User)
+            .findOne({ id: userId });
+          if (!user) throw new Error("Not authenticated");
+        },
+        onDisconnect: () => {
+          console.log("Client disconnected from subscriptions");
+        },
+      },
       context: ({ req, res }: never): OrmContext => ({
         em: this.orm.em,
         req,
@@ -181,9 +198,10 @@ export default class Application {
       app: this.host,
       cors: false,
     });
+    this.apolloServer.installSubscriptionHandlers(httpServer);
 
     const port = process.env.PORT || 3001;
     console.log("environment:", process.env.NODE_ENV);
-    this.expressServer = this.host.listen(port);
+    this.expressServer = httpServer.listen(port);
   };
 }

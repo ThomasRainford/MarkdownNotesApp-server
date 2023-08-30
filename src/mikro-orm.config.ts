@@ -6,6 +6,7 @@ import { User } from "./entities/User";
 import { Message } from "./entities/Message";
 import { ChatPrivate } from "./entities/ChatPrivate";
 import { Chat } from "./entities/Chat";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("development");
 
 export default {
