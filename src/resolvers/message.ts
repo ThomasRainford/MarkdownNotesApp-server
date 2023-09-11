@@ -23,6 +23,8 @@ import { MessageDeletedPayload } from "./object-types/MessageDeletedPayload";
 import { DeleteMessageArgs } from "./input-types/DeleteMessageArgs";
 import { MessageDeleteResponse } from "./object-types/MessageDeleteResponse";
 import { MessageSentResponse } from "./object-types/MessageSentResponse";
+import { Chat } from "../entities/Chat";
+import { PaginationInput } from "./input-types/PaginationInput";
 
 const channels = {
   NEW_MESSAGE: "NEW_MESSAGE",
@@ -36,6 +38,24 @@ export class MessageResolver {
   async messages(@Ctx() { em }: OrmContext): Promise<Message[]> {
     const messageRepo = em.getRepository(Message);
     return await messageRepo.findAll(["sender"]);
+  }
+
+  @Query(() => [Message])
+  @UseMiddleware(isAuth)
+  async chatMessages(
+    @Arg("chatId") chatId: string,
+    @Arg("pagination") pagination: PaginationInput,
+    @Ctx() { em }: OrmContext
+  ): Promise<Message[]> {
+    const chatRepo = em.getRepository(Chat);
+    const messageRepo = em.getRepository(Message);
+    const chat = await chatRepo.findOne({ id: chatId });
+    const messages = await messageRepo.find(
+      { chat },
+      { populate: ["chat"], limit: pagination.limit, offset: pagination.cursor }
+    );
+
+    return messages;
   }
 
   @Mutation(() => CreateMessageResponse)
