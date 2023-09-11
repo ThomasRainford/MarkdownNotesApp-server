@@ -14,7 +14,7 @@ import {
 import { OrmContext } from "../types/types";
 import { isAuth } from "../middleware/isAuth";
 import { User } from "../entities/User";
-import { CreateMessageResponse } from "./object-types/CreateMessageResponse";
+import { MessageResponse } from "./object-types/MessageResponse";
 import { MessageSentPayload } from "./object-types/MessagePayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
 import { ChatPrivate } from "../entities/ChatPrivate";
@@ -25,9 +25,14 @@ import { MessageDeleteResponse } from "./object-types/MessageDeleteResponse";
 import { MessageSentResponse } from "./object-types/MessageSentResponse";
 import { Chat } from "../entities/Chat";
 import { PaginationInput } from "./input-types/PaginationInput";
+import { MessageUpdateInput } from "./input-types/MessageUpdateInput";
+import { MessageUpdatedPayload } from "./object-types/MessageUpdatedPayload";
+import { UpdateMessageArgs } from "./input-types/UpdateMessageArgs";
+import { MessageUpdatedResponse } from "./object-types/MessageUpdatedResponse";
 
 const channels = {
   NEW_MESSAGE: "NEW_MESSAGE",
+  UPDATE_MESSAGE: "UPDATE_MESSAGE",
   DELETE_MESSAGE: "DELETE_MESSAGE",
 };
 
@@ -52,19 +57,23 @@ export class MessageResolver {
     const chat = await chatRepo.findOne({ id: chatId });
     const messages = await messageRepo.find(
       { chat },
-      { populate: ["chat"], limit: pagination.limit, offset: pagination.cursor }
+      {
+        populate: ["chat", "sender"],
+        limit: pagination.limit,
+        offset: pagination.cursor,
+      }
     );
 
     return messages;
   }
 
-  @Mutation(() => CreateMessageResponse)
+  @Mutation(() => MessageResponse)
   @UseMiddleware(isAuth)
   async createPrivateMessage(
     @PubSub() pubSub: PubSubEngine,
     @Arg("createMessageInput") createMessageInput: CreateMessageInput,
     @Ctx() { em, req }: OrmContext
-  ): Promise<CreateMessageResponse> {
+  ): Promise<MessageResponse> {
     const { content, chatId } = createMessageInput;
     const userRepo = em.getRepository(User);
     // Find user.
@@ -125,6 +134,35 @@ export class MessageResolver {
     return { message };
   }
 
+  @Mutation(() => MessageResponse)
+  @UseMiddleware(isAuth)
+  async updateMessage(
+    @PubSub() pubSub: PubSubEngine,
+    @Arg("messageId") messageId: string,
+    @Arg("messageInput") messageInput: MessageUpdateInput,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<MessageResponse> {
+    const messageRepo = em.getRepository(Message);
+    const messageToUpdate = await messageRepo.findOne(
+      {
+        id: messageId,
+        sender: req.session.userId,
+      },
+      ["sender", "chat.messages", "chat.participants"]
+    );
+    if (!messageToUpdate) {
+      return {
+        error: {
+          property: "messageId",
+          message: "Could not find message.",
+        },
+      };
+    }
+    messageToUpdate.content = messageInput.content;
+    await pubSub.publish(channels.UPDATE_MESSAGE, { message: messageToUpdate });
+    return { message: messageToUpdate };
+  }
+
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async deleteMessage(
@@ -140,6 +178,7 @@ export class MessageResolver {
       },
       ["sender", "chat.messages", "chat.participants"]
     );
+    // Publish deleted message ID to channel.
     await pubSub.publish(channels.DELETE_MESSAGE, { message: messageToDelete });
     // No message so return false.
     if (!messageToDelete) {
@@ -153,7 +192,6 @@ export class MessageResolver {
       return false;
     }
     await em.persistAndFlush(messageToDelete);
-    // Publish deleted message ID to channel.
     return true;
   }
 
@@ -184,6 +222,36 @@ export class MessageResolver {
     @Arg("messageSentInput") messageSentInput: NewMessageArgs
   ): MessageSentResponse {
     messageSentInput;
+    return { message: payload.message };
+  }
+
+  @Subscription({
+    topics: channels.UPDATE_MESSAGE,
+    filter: ({
+      payload,
+      args,
+    }: {
+      payload: MessageUpdatedPayload;
+      args: { messageUpdatedInput: UpdateMessageArgs };
+    }) => {
+      const chat = payload.message?.chat;
+      if (chat instanceof ChatPrivate) {
+        return (
+          chat.participants
+            .toArray()
+            .find((user) => user.id === args.messageUpdatedInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageUpdatedInput.chatId
+        );
+      }
+      return false;
+    },
+  })
+  messageUpdated(
+    @Root() payload: MessageUpdatedPayload,
+    @Arg("messageUpdatedInput") messageUpdatedInput: UpdateMessageArgs
+  ): MessageUpdatedResponse {
+    messageUpdatedInput;
     return { message: payload.message };
   }
 

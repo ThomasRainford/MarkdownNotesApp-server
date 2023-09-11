@@ -3,7 +3,7 @@ import { ObjectType, Field } from "type-graphql";
 import { Error } from "./Error";
 
 @ObjectType()
-export class CreateMessageResponse {
+export class MessageResponse {
   @Field(() => Message, { nullable: true })
   message?: Message;
 
