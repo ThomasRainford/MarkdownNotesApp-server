@@ -138,36 +138,6 @@ export class MessageResolver {
   }
 
   @Subscription({
-    topics: channels.DELETE_MESSAGE,
-    filter: ({
-      payload,
-      args,
-    }: {
-      payload: MessageDeletedPayload;
-      args: { messageDeletedInput: DeleteMessageArgs };
-    }) => {
-      const chat = payload.message?.chat;
-      if (chat instanceof ChatPrivate) {
-        return (
-          chat.participants
-            .toArray()
-            .find((user) => user.id === args.messageDeletedInput.userId) !==
-            undefined &&
-          payload.message?.chat.id === args.messageDeletedInput.chatId
-        );
-      }
-      return false;
-    },
-  })
-  messageDeleted(
-    @Root() payload: MessageDeletedPayload,
-    @Arg("messageDeletedInput") messageDeletedInput: DeleteMessageArgs
-  ): MessageDeleteResponse {
-    messageDeletedInput;
-    return { messageId: payload.message.id };
-  }
-
-  @Subscription({
     topics: channels.NEW_MESSAGE,
     filter: ({
       payload,
@@ -195,5 +165,35 @@ export class MessageResolver {
   ): MessageSentResponse {
     messageSentInput;
     return { message: payload.message };
+  }
+
+  @Subscription({
+    topics: channels.DELETE_MESSAGE,
+    filter: ({
+      payload,
+      args,
+    }: {
+      payload: MessageDeletedPayload;
+      args: { messageDeletedInput: DeleteMessageArgs };
+    }) => {
+      const chat = payload.message?.chat;
+      if (chat instanceof ChatPrivate) {
+        return (
+          chat.participants
+            .toArray()
+            .find((user) => user.id === args.messageDeletedInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageDeletedInput.chatId
+        );
+      }
+      return false;
+    },
+  })
+  messageDeleted(
+    @Root() payload: MessageDeletedPayload,
+    @Arg("messageDeletedInput") messageDeletedInput: DeleteMessageArgs
+  ): MessageDeleteResponse {
+    messageDeletedInput;
+    return { messageId: payload.message.id };
   }
 }
