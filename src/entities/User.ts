@@ -12,6 +12,7 @@ import { Field, ID, ObjectType } from "type-graphql";
 import { UserRegisterInput } from "../resolvers/input-types/UserRegisterInput";
 import { Collection as EntityCollection } from "./Collection";
 import { ChatPrivate } from "./ChatPrivate";
+import { ChatRoom } from "./ChatRoom";
 
 @ObjectType() // type-graphql
 @Entity() // orm
@@ -54,6 +55,10 @@ export class User {
   @Field(() => [ChatPrivate])
   @ManyToMany(() => ChatPrivate, "participants", { owner: true })
   chatPrivates = new Collection<ChatPrivate>(this);
+
+  @Field(() => [ChatRoom])
+  @ManyToMany(() => ChatRoom, "members", { owner: true })
+  chatRooms = new Collection<ChatRoom>(this);
 
   @Field(() => Date)
   @Property()

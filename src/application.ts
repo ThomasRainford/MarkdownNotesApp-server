@@ -22,6 +22,7 @@ import http, { Server } from "http";
 import { MessageResolver } from "./resolvers/message";
 import { ChatPrivateResolver } from "./resolvers/chat-private";
 import { User } from "./entities/User";
+import { ChatRoomResolver } from "./resolvers/chat-room";
 const MongoStore = MongoDBStore(session);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("development");
@@ -85,6 +86,7 @@ export default class Application {
           NotesListResolver,
           MessageResolver,
           ChatPrivateResolver,
+          ChatRoomResolver,
         ],
         validate: false,
       }),
@@ -168,6 +170,7 @@ export default class Application {
           NotesListResolver,
           MessageResolver,
           ChatPrivateResolver,
+          ChatRoomResolver,
         ],
         validate: false,
       }),

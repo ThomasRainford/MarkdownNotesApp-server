@@ -29,6 +29,7 @@ import { MessageUpdateInput } from "./input-types/MessageUpdateInput";
 import { MessageUpdatedPayload } from "./object-types/MessageUpdatedPayload";
 import { UpdateMessageArgs } from "./input-types/UpdateMessageArgs";
 import { MessageUpdatedResponse } from "./object-types/MessageUpdatedResponse";
+import { ChatRoom } from "../entities/ChatRoom";
 
 const channels = {
   NEW_MESSAGE: "NEW_MESSAGE",
@@ -136,6 +137,73 @@ export class MessageResolver {
 
   @Mutation(() => MessageResponse)
   @UseMiddleware(isAuth)
+  async createRoomMessage(
+    @PubSub() pubSub: PubSubEngine,
+    @Arg("createMessageInput") createMessageInput: CreateMessageInput,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<MessageResponse> {
+    const { content, chatId } = createMessageInput;
+    const userRepo = em.getRepository(User);
+    // Find user.
+    const user = await userRepo.findOne({ _id: req.session.userId }, [
+      "chatRooms",
+    ]);
+    // If the user is not logged in then send error.
+    // Otherwise create new message.
+    if (!user) {
+      return {
+        error: {
+          property: "req.session.userId",
+          message: "Please login.",
+        },
+      };
+    }
+    // Find chat.
+    const chatRoomRepo = em.getRepository(ChatRoom);
+    const chatRoom = await chatRoomRepo.findOne({ id: chatId }, [
+      "members",
+      "messages",
+    ]);
+    // Check if ChatRoom exists.
+    if (!chatRoom) {
+      return {
+        error: {
+          property: "chatId",
+          message: "A chat with the given ID was not found.",
+        },
+      };
+    }
+    // Chat is not a room chat.
+    if (!(chatRoom instanceof ChatRoom)) {
+      return {
+        error: {
+          property: "chatId",
+          message: "An ID for a chat room was given.",
+        },
+      };
+    }
+    // Check user has a ChatRoom with the given id.
+    const hasChatPrivate = user.chatRooms.contains(chatRoom);
+    if (!hasChatPrivate) {
+      return {
+        error: {
+          property: "chatId",
+          message: "You do not have access to this room chat.",
+        },
+      };
+    }
+    // Create and persist new message.
+    const message = new Message({ content, sender: user, chat: chatRoom });
+    chatRoom.messages.add(message);
+    await em.persistAndFlush([message, chatRoom]);
+    // Publish new message to channel.
+    await pubSub.publish(channels.NEW_MESSAGE, { message });
+    // Return new message.
+    return { message };
+  }
+
+  @Mutation(() => MessageResponse)
+  @UseMiddleware(isAuth)
   async updateMessage(
     @PubSub() pubSub: PubSubEngine,
     @Arg("messageId") messageId: string,
@@ -148,7 +216,7 @@ export class MessageResolver {
         id: messageId,
         sender: req.session.userId,
       },
-      ["sender", "chat.messages", "chat.participants"]
+      ["sender", "chat.messages", "chat.participants", "chat.members"]
     );
     if (!messageToUpdate) {
       return {
@@ -176,7 +244,7 @@ export class MessageResolver {
         id: messageId,
         sender: req.session.userId,
       },
-      ["sender", "chat.messages", "chat.participants"]
+      ["sender", "chat.messages", "chat.participants", "chat.members"]
     );
     // Publish deleted message ID to channel.
     await pubSub.publish(channels.DELETE_MESSAGE, { message: messageToDelete });
@@ -213,6 +281,14 @@ export class MessageResolver {
             undefined &&
           payload.message?.chat.id === args.messageSentInput.chatId
         );
+      } else if (chat instanceof ChatRoom) {
+        return (
+          chat.members
+            .toArray()
+            .find((user) => user.id === args.messageSentInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageSentInput.chatId
+        );
       }
       return false;
     },
@@ -243,6 +319,14 @@ export class MessageResolver {
             undefined &&
           payload.message?.chat.id === args.messageUpdatedInput.chatId
         );
+      } else if (chat instanceof ChatRoom) {
+        return (
+          chat.members
+            .toArray()
+            .find((user) => user.id === args.messageUpdatedInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageUpdatedInput.chatId
+        );
       }
       return false;
     },
@@ -268,6 +352,14 @@ export class MessageResolver {
       if (chat instanceof ChatPrivate) {
         return (
           chat.participants
+            .toArray()
+            .find((user) => user.id === args.messageDeletedInput.userId) !==
+            undefined &&
+          payload.message?.chat.id === args.messageDeletedInput.chatId
+        );
+      } else if (chat instanceof ChatRoom) {
+        return (
+          chat.members
             .toArray()
             .find((user) => user.id === args.messageDeletedInput.userId) !==
             undefined &&
