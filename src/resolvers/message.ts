@@ -15,7 +15,7 @@ import { OrmContext } from "../types/types";
 import { isAuth } from "../middleware/isAuth";
 import { User } from "../entities/User";
 import { MessageResponse } from "./object-types/MessageResponse";
-import { MessageSentPayload } from "./object-types/MessagePayload";
+import { MessageSentPayload } from "./object-types/MessageSentPayload";
 import { CreateMessageInput } from "./input-types/CreateMessageInput";
 import { ChatPrivate } from "../entities/ChatPrivate";
 import { NewMessageArgs } from "./input-types/NewMessageArgs";
