@@ -15,6 +15,31 @@ import { CreateChatRoomInput } from "./input-types/CreateChatRoomInput";
 
 @Resolver(ChatRoom)
 export class ChatRoomResolver {
+  @Query(() => ChatRoomResponse)
+  @UseMiddleware(isAuth)
+  async chatRoom(
+    @Arg("chatRoomId") chatRoomId: string,
+    @Ctx() { em }: OrmContext
+  ): Promise<ChatRoomResponse> {
+    const chatRoomRepo = em.getRepository(ChatRoom);
+    const chatRoom = await chatRoomRepo.findOne(
+      {
+        id: chatRoomId,
+      },
+      ["members", "messages"]
+    );
+    // Check if ChatRoom exists.
+    if (!chatRoom) {
+      return {
+        error: {
+          property: "chatRoom",
+          message: "ChatRoom does not exist.",
+        },
+      };
+    }
+    return { chatRoom };
+  }
+
   @Query(() => [ChatRoom])
   @UseMiddleware(isAuth)
   async chatRooms(@Ctx() { em, req }: OrmContext): Promise<ChatRoom[]> {
