@@ -19,8 +19,9 @@ export class ChatRoomResolver {
   @UseMiddleware(isAuth)
   async chatRoom(
     @Arg("chatRoomId") chatRoomId: string,
-    @Ctx() { em }: OrmContext
+    @Ctx() { em, req }: OrmContext
   ): Promise<ChatRoomResponse> {
+    const userRepo = em.getRepository(User);
     const chatRoomRepo = em.getRepository(ChatRoom);
     const chatRoom = await chatRoomRepo.findOne(
       {
@@ -28,6 +29,26 @@ export class ChatRoomResolver {
       },
       ["members", "messages"]
     );
+    const me = await userRepo.findOne({ _id: req.session.userId }, [
+      "chatRooms",
+    ]);
+    if (!me) {
+      return {
+        error: {
+          property: "req.session.userId",
+          message: "Please login.",
+        },
+      };
+    }
+    // Check if authenticated user is a member of the chat room.
+    if (!chatRoom?.members.contains(me)) {
+      return {
+        error: {
+          property: "chatRoom.members",
+          message: "You are not a member of this chat room.",
+        },
+      };
+    }
     // Check if ChatRoom exists.
     if (!chatRoom) {
       return {
@@ -93,6 +114,57 @@ export class ChatRoomResolver {
     }
     const chatRoom = new ChatRoom({ name, users });
     await em.populate(chatRoom, ["members", "messages"]);
+    await em.persistAndFlush(chatRoom);
+
+    return { chatRoom };
+  }
+
+  @Mutation(() => ChatRoomResponse)
+  @UseMiddleware(isAuth)
+  async updateChatRoom(
+    @Arg("chatRoomId") chatRoomId: string,
+    @Arg("name") name: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<ChatRoomResponse> {
+    const userRepo = em.getRepository(User);
+    const chatRoomRepo = em.getRepository(ChatRoom);
+    const chatRoom = await chatRoomRepo.findOne(
+      {
+        id: chatRoomId,
+      },
+      ["members", "messages"]
+    );
+    const me = await userRepo.findOne({ _id: req.session.userId }, [
+      "chatRooms",
+    ]);
+    if (!me) {
+      return {
+        error: {
+          property: "req.session.userId",
+          message: "Please login.",
+        },
+      };
+    }
+    // Check if authenticated user is a member of the chat room.
+    if (!chatRoom?.members.contains(me)) {
+      return {
+        error: {
+          property: "chatRoom.members",
+          message: "You are not a member of this chat room.",
+        },
+      };
+    }
+    // Check if ChatRoom exists.
+    if (!chatRoom) {
+      return {
+        error: {
+          property: "chatRoom",
+          message: "ChatRoom does not exist.",
+        },
+      };
+    }
+    chatRoom.name = name;
+
     await em.persistAndFlush(chatRoom);
 
     return { chatRoom };
