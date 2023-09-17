@@ -134,6 +134,15 @@ export class ChatRoomResolver {
       },
       ["members", "messages"]
     );
+    // Check if ChatRoom exists.
+    if (!chatRoom) {
+      return {
+        error: {
+          property: "chatRoom",
+          message: "ChatRoom does not exist.",
+        },
+      };
+    }
     const me = await userRepo.findOne({ _id: req.session.userId }, [
       "chatRooms",
     ]);
@@ -154,6 +163,27 @@ export class ChatRoomResolver {
         },
       };
     }
+    chatRoom.name = name;
+
+    await em.persistAndFlush(chatRoom);
+
+    return { chatRoom };
+  }
+
+  @Mutation(() => ChatRoomResponse)
+  @UseMiddleware(isAuth)
+  async joinChatRoom(
+    @Arg("chatRoomId") chatRoomId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<ChatRoomResponse> {
+    const userRepo = em.getRepository(User);
+    const chatRoomRepo = em.getRepository(ChatRoom);
+    const chatRoom = await chatRoomRepo.findOne(
+      {
+        id: chatRoomId,
+      },
+      ["members", "messages"]
+    );
     // Check if ChatRoom exists.
     if (!chatRoom) {
       return {
@@ -163,9 +193,79 @@ export class ChatRoomResolver {
         },
       };
     }
-    chatRoom.name = name;
+    const me = await userRepo.findOne({ _id: req.session.userId }, [
+      "chatRooms",
+    ]);
+    if (!me) {
+      return {
+        error: {
+          property: "req.session.userId",
+          message: "Please login.",
+        },
+      };
+    }
+    if (chatRoom?.members.contains(me)) {
+      return {
+        error: {
+          property: "chatRoom.members",
+          message: "You are already a member of this chat room.",
+        },
+      };
+    }
+    chatRoom?.members.add(me);
+    me.chatRooms.add(chatRoom);
 
-    await em.persistAndFlush(chatRoom);
+    await em.persistAndFlush([chatRoom, me]);
+
+    return { chatRoom };
+  }
+
+  @Mutation(() => ChatRoomResponse)
+  @UseMiddleware(isAuth)
+  async leaveChatRoom(
+    @Arg("chatRoomId") chatRoomId: string,
+    @Ctx() { em, req }: OrmContext
+  ): Promise<ChatRoomResponse> {
+    const userRepo = em.getRepository(User);
+    const chatRoomRepo = em.getRepository(ChatRoom);
+    const chatRoom = await chatRoomRepo.findOne(
+      {
+        id: chatRoomId,
+      },
+      ["members", "messages"]
+    );
+    // Check if ChatRoom exists.
+    if (!chatRoom) {
+      return {
+        error: {
+          property: "chatRoom",
+          message: "ChatRoom does not exist.",
+        },
+      };
+    }
+    const me = await userRepo.findOne({ _id: req.session.userId }, [
+      "chatRooms",
+    ]);
+    if (!me) {
+      return {
+        error: {
+          property: "req.session.userId",
+          message: "Please login.",
+        },
+      };
+    }
+    if (!chatRoom?.members.contains(me)) {
+      return {
+        error: {
+          property: "chatRoom.members",
+          message: "You are not a member of this chat room.",
+        },
+      };
+    }
+    chatRoom?.members.remove(me);
+    me.chatRooms.remove(chatRoom);
+
+    await em.persistAndFlush([chatRoom, me]);
 
     return { chatRoom };
   }
