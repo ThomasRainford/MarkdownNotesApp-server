@@ -7,10 +7,11 @@ import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { Message } from "../../entities/Message";
 import { Chat } from "../../entities/Chat";
 import { ChatPrivate } from "../../entities/ChatPrivate";
+import { ChatRoom } from "src/entities/ChatRoom";
 
 export default {
   metadataProvider: TsMorphMetadataProvider,
-  entities: [User, Collection, NotesList, Message, Chat, ChatPrivate],
+  entities: [User, Collection, NotesList, Message, Chat, ChatPrivate, ChatRoom],
   dbName: "testing-db",
   type: "mongo",
   clientUrl: `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}`,

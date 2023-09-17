@@ -269,4 +269,9 @@ export class ChatRoomResolver {
 
     return { chatRoom };
   }
+
+  // TODO: Add subscription for user joining and leaving chat room:
+  // - Subscription will return the new chat room (new members list).
+  // - Filtering will include only members of the chat room.
+  // This is very similar to the message subscriptions.
 }
