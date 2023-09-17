@@ -246,8 +246,6 @@ export class MessageResolver {
       },
       ["sender", "chat.messages", "chat.participants", "chat.members"]
     );
-    // Publish deleted message ID to channel.
-    await pubSub.publish(channels.DELETE_MESSAGE, { message: messageToDelete });
     // No message so return false.
     if (!messageToDelete) {
       return false;
@@ -260,6 +258,8 @@ export class MessageResolver {
       return false;
     }
     await em.persistAndFlush(messageToDelete);
+    // Publish deleted message ID to channel.
+    await pubSub.publish(channels.DELETE_MESSAGE, { message: messageToDelete });
     return true;
   }
 
