@@ -19,6 +19,8 @@ import { CreateChatRoomInput } from "./input-types/CreateChatRoomInput";
 import { UserLeaveChatRoomPayload } from "./object-types/UserLeaveChatRoomPayload";
 import { UserLeaveChatRoomArgs } from "./input-types/UserLeaveChatRoomArgs";
 import { UserLeaveChatRoomResponse } from "./object-types/UserLeaveChatRoomResponse";
+import { UserJoinChatRoomPayload } from "./object-types/UserJoinChatRoomPayload";
+import { UserJoinChatRoomArgs } from "./input-types/UserJoinChatRoomArgs";
 
 const channels = {
   USER_JOIN: "USER_JOIN",
@@ -185,6 +187,7 @@ export class ChatRoomResolver {
   @Mutation(() => ChatRoomResponse)
   @UseMiddleware(isAuth)
   async joinChatRoom(
+    @PubSub() pubSub: PubSubEngine,
     @Arg("chatRoomId") chatRoomId: string,
     @Ctx() { em, req }: OrmContext
   ): Promise<ChatRoomResponse> {
@@ -228,7 +231,8 @@ export class ChatRoomResolver {
     me.chatRooms.add(chatRoom);
 
     await em.persistAndFlush([chatRoom, me]);
-
+    // Publish chat room and user to channel.
+    await pubSub.publish(channels.USER_JOIN, { chatRoom, user: me });
     return { chatRoom };
   }
 
@@ -279,15 +283,38 @@ export class ChatRoomResolver {
     me.chatRooms.remove(chatRoom);
 
     await em.persistAndFlush([chatRoom, me]);
-    // Publish deleted message ID to channel.
+    // Publish chat room and user to channel.
     await pubSub.publish(channels.USER_LEAVE, { chatRoom, user: me });
     return { chatRoom };
   }
 
-  // TODO: Add subscription for user joining and leaving chat room:
-  // - Subscription will return the new chat room (new members list).
-  // - Filtering will include only members of the chat room.
-  // This is very similar to the message subscriptions.
+  @Subscription({
+    topics: channels.USER_JOIN,
+    filter: ({
+      payload,
+      args,
+    }: {
+      payload: UserJoinChatRoomPayload;
+      args: { userJoinChatRoomInput: UserJoinChatRoomArgs };
+    }) => {
+      return (
+        payload.chatRoom.members
+          .toArray()
+          .find((user) => user.id === args.userJoinChatRoomInput.userId) !==
+          undefined && payload.chatRoom.id === args.userJoinChatRoomInput.chatId
+      );
+    },
+  })
+  userJoinChatRoom(
+    @Root() payload: UserJoinChatRoomPayload,
+    @Arg("userJoinChatRoomInput") userJoinChatRoomInput: UserJoinChatRoomArgs
+  ): UserLeaveChatRoomResponse {
+    payload;
+    return {
+      chatRoomId: userJoinChatRoomInput.chatId,
+      userId: userJoinChatRoomInput.userId,
+    };
+  }
 
   @Subscription({
     topics: channels.USER_LEAVE,
