@@ -6,12 +6,24 @@ import {
   Arg,
   Ctx,
   Mutation,
+  PubSub,
+  PubSubEngine,
   Query,
   Resolver,
+  Root,
+  Subscription,
   UseMiddleware,
 } from "type-graphql";
 import { ChatRoomResponse } from "./object-types/ChatRoomResponse";
 import { CreateChatRoomInput } from "./input-types/CreateChatRoomInput";
+import { UserLeaveChatRoomPayload } from "./object-types/UserLeaveChatRoomPayload";
+import { UserLeaveChatRoomArgs } from "./input-types/UserLeaveChatRoomArgs";
+import { UserLeaveChatRoomResponse } from "./object-types/UserLeaveChatRoomResponse";
+
+const channels = {
+  USER_JOIN: "USER_JOIN",
+  USER_LEAVE: "USER_LEAVE",
+};
 
 @Resolver(ChatRoom)
 export class ChatRoomResolver {
@@ -223,6 +235,7 @@ export class ChatRoomResolver {
   @Mutation(() => ChatRoomResponse)
   @UseMiddleware(isAuth)
   async leaveChatRoom(
+    @PubSub() pubSub: PubSubEngine,
     @Arg("chatRoomId") chatRoomId: string,
     @Ctx() { em, req }: OrmContext
   ): Promise<ChatRoomResponse> {
@@ -266,7 +279,8 @@ export class ChatRoomResolver {
     me.chatRooms.remove(chatRoom);
 
     await em.persistAndFlush([chatRoom, me]);
-
+    // Publish deleted message ID to channel.
+    await pubSub.publish(channels.USER_LEAVE, { chatRoom, user: me });
     return { chatRoom };
   }
 
@@ -274,4 +288,33 @@ export class ChatRoomResolver {
   // - Subscription will return the new chat room (new members list).
   // - Filtering will include only members of the chat room.
   // This is very similar to the message subscriptions.
+
+  @Subscription({
+    topics: channels.USER_LEAVE,
+    filter: ({
+      payload,
+      args,
+    }: {
+      payload: UserLeaveChatRoomPayload;
+      args: { userLeaveChatRoomInput: UserLeaveChatRoomArgs };
+    }) => {
+      return (
+        payload.chatRoom.members
+          .toArray()
+          .find((user) => user.id === args.userLeaveChatRoomInput.userId) !==
+          undefined &&
+        payload.chatRoom.id === args.userLeaveChatRoomInput.chatId
+      );
+    },
+  })
+  userLeaveChatRoom(
+    @Root() payload: UserLeaveChatRoomPayload,
+    @Arg("userLeaveChatRoomInput") userLeaveChatRoomInput: UserLeaveChatRoomArgs
+  ): UserLeaveChatRoomResponse {
+    payload;
+    return {
+      chatRoomId: userLeaveChatRoomInput.chatId,
+      userId: userLeaveChatRoomInput.userId,
+    };
+  }
 }
