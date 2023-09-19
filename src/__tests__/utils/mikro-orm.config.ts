@@ -7,7 +7,7 @@ import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { Message } from "../../entities/Message";
 import { Chat } from "../../entities/Chat";
 import { ChatPrivate } from "../../entities/ChatPrivate";
-import { ChatRoom } from "src/entities/ChatRoom";
+import { ChatRoom } from "../../entities/ChatRoom";
 
 export default {
   metadataProvider: TsMorphMetadataProvider,
