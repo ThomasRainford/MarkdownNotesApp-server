@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import mikroOrmConfig from "./mikro-orm.config";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("development");
 
 import Application from "./application";

@@ -4,6 +4,8 @@ import { NotesList } from "../../entities/NotesList";
 import { Note } from "../../resolvers/object-types/Note";
 import { Collection } from "../../entities/Collection";
 import { User } from "../../entities/User";
+import { Message } from "../../entities/Message";
+import { ChatPrivate } from "../../entities/ChatPrivate";
 
 export const seed = async (
   em: EntityManager<IDatabaseDriver<Connection>>
@@ -12,6 +14,8 @@ export const seed = async (
 
   await createCollections(em, users);
   await createNotesLists(em, users);
+  const chatPrivates = await createChatPrivates(em, users);
+  await createMessages(em, users, chatPrivates);
 };
 
 const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
@@ -48,6 +52,73 @@ const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
   await em.persistAndFlush([user1, user2, user3, user4]);
   users.push(user1, user2, user3, user4);
   return users;
+};
+
+const createChatPrivates = async (
+  em: EntityManager<IDatabaseDriver<Connection>>,
+  users: User[]
+) => {
+  const user1 = users[0];
+  const user2 = users[1];
+  const user3 = users[2];
+  // User1 has a private chat with User2 and User3;
+  const chatPrivate1 = new ChatPrivate({ userA: user1, userB: user2 });
+  const chatPrivate2 = new ChatPrivate({ userA: user1, userB: user3 });
+  user1.chatPrivates.add(chatPrivate1, chatPrivate2);
+  user2.chatPrivates.add(chatPrivate1);
+  user3.chatPrivates.add(chatPrivate2);
+
+  await em.persistAndFlush([chatPrivate1, chatPrivate2]);
+
+  return [chatPrivate1, chatPrivate2];
+};
+
+const createMessages = async (
+  em: EntityManager<IDatabaseDriver<Connection>>,
+  users: User[],
+  chatPrivates: ChatPrivate[]
+) => {
+  // User1 sends three messages to first chatPrivate.
+  const message11 = new Message({
+    content: "message1",
+    sender: users[0],
+    chat: chatPrivates[0],
+  });
+  const message12 = new Message({
+    content: "message2",
+    sender: users[0],
+    chat: chatPrivates[0],
+  });
+  const message13 = new Message({
+    content: "message3",
+    sender: users[0],
+    chat: chatPrivates[0],
+  });
+  // User3 sends three messages to second chatPrivate.
+  const message21 = new Message({
+    content: "message1",
+    sender: users[2],
+    chat: chatPrivates[1],
+  });
+  const message22 = new Message({
+    content: "message2",
+    sender: users[2],
+    chat: chatPrivates[1],
+  });
+  const message23 = new Message({
+    content: "message3",
+    sender: users[2],
+    chat: chatPrivates[1],
+  });
+
+  await em.persistAndFlush([
+    message11,
+    message12,
+    message13,
+    message21,
+    message22,
+    message23,
+  ]);
 };
 
 const createCollections = async (
