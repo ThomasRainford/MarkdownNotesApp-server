@@ -1,4 +1,3 @@
-import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import {
   Arg,
@@ -8,6 +7,7 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
+import bcrypt from "bcrypt";
 import { COOKIE_NAME } from "../constants";
 import { Collection } from "../entities/Collection";
 import { User } from "../entities/User";
@@ -81,7 +81,8 @@ export class UserResolver {
       };
     }
 
-    const hashedPassword = await argon2.hash(password);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     const user = new User({
       email,
       username,
@@ -139,7 +140,7 @@ export class UserResolver {
     }
 
     // Validate password.
-    const valid = await argon2.verify(user.password, password);
+    const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return {
         errors: [
@@ -239,7 +240,8 @@ export class UserResolver {
       user.username = username;
     }
     if (password) {
-      user.password = await argon2.hash(password);
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
     }
 
     em.persistAndFlush(user);
@@ -688,7 +690,8 @@ export class UserResolver {
       };
     }
 
-    user.password = await argon2.hash(newPassword);
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
 
     await em.persistAndFlush(user);
 
