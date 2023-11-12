@@ -1,5 +1,5 @@
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
-import argon2 from "argon2";
+import bcrypt from "bcrypt";
 import { NotesList } from "../../entities/NotesList";
 import { Note } from "../../resolvers/object-types/Note";
 import { Collection } from "../../entities/Collection";
@@ -20,25 +20,29 @@ export const seed = async (
 
 const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
   const users: User[] = [];
-  let hashedPassword = await argon2.hash("password1");
+  let salt = await bcrypt.genSalt(10);
+  let hashedPassword = await bcrypt.hash("password1", salt);
   const user1 = new User({
     email: "user1@mail.com",
     username: "User1",
     password: hashedPassword,
   });
-  hashedPassword = await argon2.hash("password2");
+  salt = await bcrypt.genSalt(10);
+  hashedPassword = await bcrypt.hash("password2", salt);
   const user2 = new User({
     email: "user2@mail.com",
     username: "User2",
     password: hashedPassword,
   });
-  hashedPassword = await argon2.hash("password3");
+  salt = await bcrypt.genSalt(10);
+  hashedPassword = await bcrypt.hash("password3", salt);
   const user3 = new User({
     email: "user3@mail.com",
     username: "User3",
     password: hashedPassword,
   });
-  hashedPassword = await argon2.hash("password4");
+  salt = await bcrypt.genSalt(10);
+  hashedPassword = await bcrypt.hash("password4", salt);
   const user4 = new User({
     email: "user4@mail.com",
     username: "User4",
