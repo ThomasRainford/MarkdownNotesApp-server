@@ -4,6 +4,7 @@ import { MongoClient } from "mongodb";
 import "reflect-metadata";
 import Application from "../application";
 import { ChatPrivate } from "../entities/ChatPrivate";
+import { ChatRoom } from "../entities/ChatRoom";
 import { Collection } from "../entities/Collection";
 import { Message } from "../entities/Message";
 import { NotesList } from "../entities/NotesList";
@@ -21,7 +22,8 @@ export const seed = async (
   await createCollections(em, users);
   await createNotesLists(em, users);
   const chatPrivates = await createChatPrivates(em, users);
-  await createMessages(em, users, chatPrivates);
+  const chatRooms = await createChatRooms(em, users);
+  await createMessages(em, users, chatPrivates, chatRooms);
 };
 
 const createUsers = async (em: EntityManager<IDatabaseDriver<Connection>>) => {
@@ -83,11 +85,31 @@ const createChatPrivates = async (
   return [chatPrivate1, chatPrivate2];
 };
 
+const createChatRooms = async (
+  em: EntityManager<IDatabaseDriver<Connection>>,
+  users: User[]
+) => {
+  const user1 = users[0];
+  const user2 = users[1];
+  const user3 = users[2];
+  // User1, user2 and user3 have a chat room.
+  const chatRoom = new ChatRoom({
+    name: "Chat Room 1",
+    users: [user1, user2, user3],
+  });
+
+  await em.persistAndFlush([chatRoom]);
+
+  return [chatRoom];
+};
+
 const createMessages = async (
   em: EntityManager<IDatabaseDriver<Connection>>,
   users: User[],
-  chatPrivates: ChatPrivate[]
+  chatPrivates: ChatPrivate[],
+  chatRooms: ChatRoom[]
 ) => {
+  // Chat Privates.
   // User1 sends three messages to first chatPrivate.
   const message11 = new Message({
     content: "message1",
@@ -129,6 +151,28 @@ const createMessages = async (
     message22,
     message23,
   ]);
+
+  // Chat Rooms.
+  // User 1 sends a message.
+  const messageUser1 = new Message({
+    content: "I am user 1.",
+    sender: users[0],
+    chat: chatRooms[0],
+  });
+  // User 2 sends a message.
+  const messageUser2 = new Message({
+    content: "I am user 2.",
+    sender: users[1],
+    chat: chatRooms[0],
+  });
+  // User 3 sends a message.
+  const messageUser3 = new Message({
+    content: "I am user 3.",
+    sender: users[2],
+    chat: chatRooms[0],
+  });
+
+  await em.persistAndFlush([messageUser1, messageUser2, messageUser3]);
 };
 
 const createCollections = async (
