@@ -208,26 +208,38 @@ const createNotesLists = async (
   em: EntityManager<IDatabaseDriver<Connection>>,
   users: User[]
 ) => {
-  const notes = [
-    new Note({ title: "Note 1", body: "Body 1" }),
-    new Note({ title: "Note 2", body: "Body 2" }),
-    new Note({ title: "Note 3", body: "Body 3" }),
-    new Note({ title: "Note 4", body: "Body 4" }),
-  ];
   for (const user of users) {
     const collections = user.collections;
     for (const collection of collections) {
+      const notes1 = [
+        new Note({ title: "Note 1", body: "Body 1" }),
+        new Note({ title: "Note 2", body: "Body 2" }),
+        new Note({ title: "Note 3", body: "Body 3" }),
+        new Note({ title: "Note 4", body: "Body 4" }),
+      ];
+      const notes2 = [
+        new Note({ title: "Note 1", body: "Body 1" }),
+        new Note({ title: "Note 2", body: "Body 2" }),
+        new Note({ title: "Note 3", body: "Body 3" }),
+        new Note({ title: "Note 4", body: "Body 4" }),
+      ];
+      const notes3 = [
+        new Note({ title: "Note 1", body: "Body 1" }),
+        new Note({ title: "Note 2", body: "Body 2" }),
+        new Note({ title: "Note 3", body: "Body 3" }),
+        new Note({ title: "Note 4", body: "Body 4" }),
+      ];
       const notesList1 = new NotesList({
         title: "NotesList 1",
-        notes,
+        notes: notes1,
       });
       const notesList2 = new NotesList({
         title: "NotesList 2",
-        notes,
+        notes: notes2,
       });
       const notesList3 = new NotesList({
         title: "NotesList 3",
-        notes,
+        notes: notes3,
       });
 
       notesList1.collection = collection;
