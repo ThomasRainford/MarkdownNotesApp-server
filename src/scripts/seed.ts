@@ -275,9 +275,10 @@ export const dropDb = async (): Promise<void> => {
   console.log("Dropping DB...\n");
   await dropDb();
 
-  console.log("Started DB seed...\n");
   const application = new Application();
+  console.log("Connecting to DB...\n");
   await application.connect(mikroOrmConfig);
+  console.log("Started DB seed...\n");
   await seed(application.orm.em);
 
   console.log("\nDB Seed complete");

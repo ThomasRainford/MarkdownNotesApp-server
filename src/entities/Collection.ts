@@ -1,16 +1,16 @@
 import {
   Entity,
+  Filter,
+  ManyToOne,
+  OneToMany,
+  Collection as OrmCollection,
   PrimaryKey,
   Property,
   SerializedPrimaryKey,
-  Collection as OrmCollection,
-  ManyToOne,
-  OneToMany,
-  Filter,
 } from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
-import { CollectionInput } from "../resolvers/input-types/CollectionInput";
 import { Field, ID, ObjectType } from "type-graphql";
+import { CollectionInput } from "../resolvers/input-types/CollectionInput";
 import { NotesList } from "./NotesList";
 import { User } from "./User";
 
@@ -27,7 +27,7 @@ export class Collection {
   id: string;
 
   @Field(() => User)
-  @ManyToOne()
+  @ManyToOne({ entity: "User" })
   owner: User;
 
   @Field()
