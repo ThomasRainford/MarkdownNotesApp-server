@@ -1,4 +1,3 @@
-import { Message } from "../entities/Message";
 import {
   Arg,
   Ctx,
@@ -11,25 +10,26 @@ import {
   Subscription,
   UseMiddleware,
 } from "type-graphql";
-import { OrmContext } from "../types/types";
-import { isAuth } from "../middleware/isAuth";
+import { Chat } from "../entities/Chat";
+import { ChatPrivate } from "../entities/ChatPrivate";
+import { ChatRoom } from "../entities/ChatRoom";
+import { Message } from "../entities/Message";
 import { User } from "../entities/User";
+import { isAuth } from "../middleware/isAuth";
+import { OrmContext } from "../types/types";
+import { CreateMessageInput } from "./input-types/CreateMessageInput";
+import { DeleteMessageArgs } from "./input-types/DeleteMessageArgs";
+import { MessageUpdateInput } from "./input-types/MessageUpdateInput";
+import { NewMessageArgs } from "./input-types/NewMessageArgs";
+import { PaginationInput } from "./input-types/PaginationInput";
+import { UpdateMessageArgs } from "./input-types/UpdateMessageArgs";
+import { MessageDeleteResponse } from "./object-types/MessageDeleteResponse";
+import { MessageDeletedPayload } from "./object-types/MessageDeletedPayload";
 import { MessageResponse } from "./object-types/MessageResponse";
 import { MessageSentPayload } from "./object-types/MessageSentPayload";
-import { CreateMessageInput } from "./input-types/CreateMessageInput";
-import { ChatPrivate } from "../entities/ChatPrivate";
-import { NewMessageArgs } from "./input-types/NewMessageArgs";
-import { MessageDeletedPayload } from "./object-types/MessageDeletedPayload";
-import { DeleteMessageArgs } from "./input-types/DeleteMessageArgs";
-import { MessageDeleteResponse } from "./object-types/MessageDeleteResponse";
 import { MessageSentResponse } from "./object-types/MessageSentResponse";
-import { Chat } from "../entities/Chat";
-import { PaginationInput } from "./input-types/PaginationInput";
-import { MessageUpdateInput } from "./input-types/MessageUpdateInput";
 import { MessageUpdatedPayload } from "./object-types/MessageUpdatedPayload";
-import { UpdateMessageArgs } from "./input-types/UpdateMessageArgs";
 import { MessageUpdatedResponse } from "./object-types/MessageUpdatedResponse";
-import { ChatRoom } from "../entities/ChatRoom";
 
 const channels = {
   NEW_MESSAGE: "NEW_MESSAGE",
@@ -50,22 +50,30 @@ export class MessageResolver {
   @UseMiddleware(isAuth)
   async chatMessages(
     @Arg("chatId") chatId: string,
-    @Arg("pagination") pagination: PaginationInput,
-    @Ctx() { em }: OrmContext
+    @Ctx() { em }: OrmContext,
+    @Arg("pagination", { nullable: true }) pagination?: PaginationInput
   ): Promise<Message[]> {
     const chatRepo = em.getRepository(Chat);
     const messageRepo = em.getRepository(Message);
     const chat = await chatRepo.findOne({ id: chatId });
-    const messages = await messageRepo.find(
-      { chat },
-      {
-        populate: ["chat", "sender"],
-        limit: pagination.limit,
-        offset: pagination.cursor,
-      }
-    );
 
-    return messages;
+    if (!pagination) {
+      return await messageRepo.find(
+        { chat },
+        {
+          populate: ["chat", "sender"],
+        }
+      );
+    } else {
+      return await messageRepo.find(
+        { chat },
+        {
+          populate: ["chat", "sender"],
+          limit: pagination.limit,
+          offset: pagination.cursor,
+        }
+      );
+    }
   }
 
   @Mutation(() => MessageResponse)
